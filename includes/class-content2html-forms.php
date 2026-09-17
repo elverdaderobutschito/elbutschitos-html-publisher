@@ -18,10 +18,34 @@ if (!defined('ABSPATH')) {
  *    bundled PHP handler that emails the submitted data.
  */
 class Content2HTML_Forms {
-    private const HANDLER_TEMPLATE_PATH = WPSTATIC_DEPLOY_DIR . 'includes/form-handler-template.php';
+    private const HANDLER_TEMPLATE_PATH = CONTENT2HTML_DEPLOY_DIR . 'includes/form-handler-template.txt';
     private const HANDLER_FILENAME = 'form-handler.php';
-    private const VALIDATION_SCRIPT_SOURCE = WPSTATIC_DEPLOY_DIR . 'includes/form-validate.js';
-    private const VALIDATION_SCRIPT_FILENAME = 'wpstatic-form-validate.js';
+    private const VALIDATION_SCRIPT_SOURCE = CONTENT2HTML_DEPLOY_DIR . 'includes/form-validate.js';
+    private const VALIDATION_SCRIPT_FILENAME = 'content2html-form-validate.js';
+
+    /**
+     * Local build directories must never contain executable PHP or an
+     * active .htaccess (WP.org review: "Writing data to disallowed or
+     * incorrect locations"). These files are therefore written locally
+     * under harmless, non-executable dummy names and only renamed to
+     * their real, active name at actual SFTP upload time (see
+     * Content2HTML_SftpUploader::uploadFile()) - on the WordPress
+     * installation itself, they never exist under an executable/active
+     * name.
+     */
+    private const SFTP_DUMMY_TO_REAL_FILENAME = [
+        'content2html-form-handler.source.txt' => self::HANDLER_FILENAME,
+        'content2html-htaccess.source.txt' => '.htaccess',
+        'content2html-form-validate.source.txt' => self::VALIDATION_SCRIPT_FILENAME,
+    ];
+
+    /**
+     * Exposes the dummy-to-real filename mapping to the SFTP uploader,
+     * which performs the actual rename at upload time.
+     */
+    public static function getSftpDummyToRealFilenameMap(): array {
+        return self::SFTP_DUMMY_TO_REAL_FILENAME;
+    }
 
     /**
      * Configures the generator to match the current target and form
@@ -125,7 +149,9 @@ class Content2HTML_Forms {
 
         $content = strtr($template, $replacements);
 
-        file_put_contents(rtrim($buildDir, '/') . '/' . self::HANDLER_FILENAME, $content);
+        $dummyFilename = array_search(self::HANDLER_FILENAME, self::SFTP_DUMMY_TO_REAL_FILENAME, true);
+
+        file_put_contents(rtrim($buildDir, '/') . '/' . $dummyFilename, $content);
 
         self::ensureLogProtection($buildDir);
     }
@@ -146,7 +172,15 @@ class Content2HTML_Forms {
             return;
         }
 
-        copy($source, rtrim($buildDir, '/') . '/' . self::VALIDATION_SCRIPT_FILENAME);
+        // Netlify's ZIP-based deploy carries no execution risk for a
+        // static JS file, so it's written under its real name there. For
+        // SFTP targets, the dummy name is used and renamed to the real
+        // one only at upload time (see SFTP_DUMMY_TO_REAL_FILENAME).
+        $filename = $settings['target'] === 'netlify'
+            ? self::VALIDATION_SCRIPT_FILENAME
+            : array_search(self::VALIDATION_SCRIPT_FILENAME, self::SFTP_DUMMY_TO_REAL_FILENAME, true);
+
+        copy($source, rtrim($buildDir, '/') . '/' . $filename);
     }
 
     /**
@@ -157,7 +191,8 @@ class Content2HTML_Forms {
      */
     private static function ensureLogProtection(string $buildDir): void {
         $rule = "\n<Files \"form-handler.log\">\n    Require all denied\n</Files>\n";
-        $htaccessPath = rtrim($buildDir, '/') . '/.htaccess';
+        $htaccessDummyFilename = array_search('.htaccess', self::SFTP_DUMMY_TO_REAL_FILENAME, true);
+        $htaccessPath = rtrim($buildDir, '/') . '/' . $htaccessDummyFilename;
 
         $existing = is_file($htaccessPath) ? (string) file_get_contents($htaccessPath) : '';
 

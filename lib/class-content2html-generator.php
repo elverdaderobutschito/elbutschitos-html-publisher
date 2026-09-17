@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 // plugin has already bundled and loaded its own copy of simplehtmldom
 // (a fairly commonly used library) - simply skip loading ours in that
 // case, since the class/function names are identical either way.
-if (!class_exists('simple_html_dom', false)) {
+if (!class_exists('Content2HTML_SimpleHtmlDom', false)) {
     require_once __DIR__ . '/simple_html_dom.php';
 }
 
@@ -514,6 +514,7 @@ class Content2HTML_Generator {
         $requiredMessage = $this->formOptions['validation_msg_required'] ?? '';
         $selectOneMessage = $this->formOptions['validation_msg_select_one'] ?? '';
 
+        // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- this string becomes part of the STATIC EXPORTED page's HTML, served entirely outside WordPress on the external deployment target; wp_enqueue_script() enqueues scripts for the current WordPress site's own admin/frontend output, which is not what's happening here.
         $scriptTag = '<script src="' . htmlspecialchars($scriptPath, ENT_QUOTES) . '"'
             . ($honeypotField !== '' ? ' data-honeypot="' . htmlspecialchars($honeypotField, ENT_QUOTES) . '"' : '')
             . ($requiredMessage !== '' ? ' data-msg-required="' . htmlspecialchars($requiredMessage, ENT_QUOTES) . '"' : '')
@@ -590,7 +591,14 @@ class Content2HTML_Generator {
     }
 
     private function tidyHtml(string $template): string {
-        $html = content2html_str_get_html($template);
+        // stripRN explicitly false: the library's default (true) replaces
+        // every \r and \n in the source with a single space before
+        // parsing even begins, which silently collapses the entire
+        // template onto one line by the time it comes back out -
+        // harmless for how a browser renders it, but makes the generated
+        // file unreadable and undermines the point of handing back a
+        // clean static export.
+        $html = content2html_str_get_html($template, true, true, CONTENT2HTML_DEFAULT_TARGET_CHARSET, false);
 
         if ($html === false) {
             // Template wasn't valid HTML - return it unchanged instead of
@@ -720,6 +728,7 @@ class Content2HTML_Generator {
         if (@copy($src, $target) === false) {
             // Deliberately not a hard failure - a single missing image
             // shouldn't stop the entire build, but it should be visible.
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error -- deliberate, not leftover debug code: surfaces a non-fatal failure (one image out of a potentially large batch couldn't be copied) as a standard PHP warning, visible in the site's own error log, without aborting the whole export.
             trigger_error(esc_html("Could not copy image: {$src} -> {$target}"), E_USER_WARNING);
         } else {
             $this->writtenFiles[] = $target;

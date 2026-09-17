@@ -26,10 +26,10 @@ directory structure (permalink paths) defined in WordPress.
    `vendor/` with a real `composer install` run (the autoloader will
    then be overwritten automatically).
 
-3. **Add `WPSTATIC_ENCRYPTION_KEY` to `wp-config.php`** (recommended,
+3. **Add `CONTENT2HTML_ENCRYPTION_KEY` to `wp-config.php`** (recommended,
    before entering credentials):
    ```php
-   define('WPSTATIC_ENCRYPTION_KEY', 'a-long-random-value');
+   define('CONTENT2HTML_ENCRYPTION_KEY', 'a-long-random-value');
    ```
    Generate one e.g. via `php -r "echo bin2hex(random_bytes(32));"`.
    Without this constant, the plugin still works (with an automatically
@@ -147,7 +147,7 @@ and our `form-handler.php` isn't generated/uploaded at all in that case.
 
 **Client-side validation** (Netlify + SFTP, automatically active as soon
 as forms are enabled): a lightweight JS file
-(`wpstatic-form-validate.js`) checks before submitting whether fields
+(`content2html-form-validate.js`) checks before submitting whether fields
 with `aria-required="true"` are filled in (for checkbox/radio groups: at
 least one option) and whether `type="email"` fields look like a valid
 address - using the browser's native validation UI (`reportValidity()`)
@@ -166,7 +166,7 @@ Important for Netlify: Netlify reads the form schema (which field names
 exist) directly from the HTML at deploy time - purely client-side
 disabling would still let these fields show up there as (empty) columns.
 The honeypot field itself is exempt from this and is kept.
-`wpstatic-form-validate.js` additionally disables the same fields on
+`content2html-form-validate.js` additionally disables the same fields on
 submit as a safety net, in case one slips through anyway.
 
 ## Assets (CSS/JS/fonts/images)

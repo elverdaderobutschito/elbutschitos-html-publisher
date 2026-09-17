@@ -8,7 +8,7 @@
  * configured values) - manual changes made directly to the uploaded
  * version are lost on the next run. Adjustments belong in the plugin
  * settings (Content2HTML -> Forms), or, if needed, in this template
- * (includes/form-handler-template.php).
+ * (includes/form-handler-template.txt).
  *
  * How it works: accepts a POST request from one of the generated HTML
  * forms, emails the content, and then redirects to a thank-you page (or
@@ -37,7 +37,7 @@ if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST')
     exit('Method Not Allowed');
 }
 
-function wpstatic_form_redirect_or_success(string $redirectUrl): void {
+function content2html_form_redirect_or_success(string $redirectUrl): void {
     if ($redirectUrl !== '') {
         header('Location: ' . $redirectUrl);
         exit;
@@ -52,7 +52,7 @@ function wpstatic_form_redirect_or_success(string $redirectUrl): void {
     $referer = filter_var($referer, FILTER_VALIDATE_URL) !== false ? $referer : '';
 
     if ($referer !== '') {
-        header('Location: ' . wpstatic_add_sent_param($referer));
+        header('Location: ' . content2html_add_sent_param($referer));
         exit;
     }
 
@@ -66,7 +66,7 @@ function wpstatic_form_redirect_or_success(string $redirectUrl): void {
  * parameters (e.g. if ?sent=1 is already present in the referrer URL
  * because a previous redirect led there).
  */
-function wpstatic_add_sent_param(string $url): string {
+function content2html_add_sent_param(string $url): string {
     $parts = parse_url($url);
     $query = [];
 
@@ -91,7 +91,7 @@ function wpstatic_add_sent_param(string $url): string {
 // pretend "success" without actually sending anything, so as not to tip
 // the bot off that it was detected.
 if (!empty($_POST[$HONEYPOT_FIELD])) {
-    wpstatic_form_redirect_or_success($REDIRECT_URL);
+    content2html_form_redirect_or_success($REDIRECT_URL);
 }
 
 if ($RECIPIENT === '') {
@@ -108,7 +108,7 @@ if ($RECIPIENT === '') {
  * since they relate to WordPress mechanisms that no longer exist in the
  * static context.
  */
-function wpstatic_is_technical_field(string $key): bool {
+function content2html_is_technical_field(string $key): bool {
     if ($key === '' || $key[0] === '_') {
         return true; // WP convention: internal/meta fields start with "_"
     }
@@ -123,7 +123,7 @@ function wpstatic_is_technical_field(string $key): bool {
 $lines = [];
 
 foreach ($_POST as $key => $value) {
-    if ($key === $HONEYPOT_FIELD || wpstatic_is_technical_field($key)) {
+    if ($key === $HONEYPOT_FIELD || content2html_is_technical_field($key)) {
         continue;
     }
 
@@ -158,9 +158,9 @@ foreach (['email', 'e-mail', 'e_mail', 'mail'] as $emailField) {
 $mailResult = mail($RECIPIENT, $subject, $body, implode("\r\n", $headers));
 $mailError = $mailResult ? null : error_get_last();
 
-wpstatic_log_form_submission($RECIPIENT, $subject, $mailResult, $mailError);
+content2html_log_form_submission($RECIPIENT, $subject, $mailResult, $mailError);
 
-wpstatic_form_redirect_or_success($REDIRECT_URL);
+content2html_form_redirect_or_success($REDIRECT_URL);
 
 /**
  * Writes one line per form submission to form-handler.log - so you can
@@ -170,7 +170,7 @@ wpstatic_form_redirect_or_success($REDIRECT_URL);
  * "arrived at the recipient" - SPF/DKIM rejection or server-side spam
  * filtering often only happen AFTERWARDS and don't show up here.
  */
-function wpstatic_log_form_submission(string $recipient, string $subject, bool $success, ?array $error): void {
+function content2html_log_form_submission(string $recipient, string $subject, bool $success, ?array $error): void {
     $line = sprintf(
         "%s;%s;an=%s;betreff=%s;php_mail_ergebnis=%s%s\n",
         date('Y-m-d'),

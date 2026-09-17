@@ -17,7 +17,7 @@ class Content2HTML_MarkdownExport {
      * @return string Absolute path to the generated ZIP file.
      */
     public static function buildZip(array $settings, bool $localizeImages = true): string {
-        $exportDir = wp_upload_dir()['basedir'] . '/wpstatic-markdown-export-' . uniqid();
+        $exportDir = wp_upload_dir()['basedir'] . '/content2html-markdown-export-' . uniqid();
         wp_mkdir_p($exportDir);
 
         $converter = new \League\HTMLToMarkdown\HtmlConverter([
@@ -48,6 +48,7 @@ class Content2HTML_MarkdownExport {
         // apply_filters('the_content', ...) renders shortcodes/blocks exactly
         // like the frontend does - the same basis the REST API uses for
         // content.rendered.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- "the_content" is an existing WordPress core hook being invoked here, not a new hook defined by this plugin; prefixing it would just call a hook that doesn't exist.
         $html = apply_filters('the_content', $post->post_content);
 
         if ($localizeImages) {

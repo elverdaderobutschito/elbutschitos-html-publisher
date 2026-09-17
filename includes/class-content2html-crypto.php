@@ -12,8 +12,8 @@
  * too, in that case).
  *
  * Key management:
- *  - Preferred: WPSTATIC_ENCRYPTION_KEY as a constant in wp-config.php,
- *    e.g. define('WPSTATIC_ENCRYPTION_KEY', bin2hex(random_bytes(32)));
+ *  - Preferred: CONTENT2HTML_ENCRYPTION_KEY as a constant in wp-config.php,
+ *    e.g. define('CONTENT2HTML_ENCRYPTION_KEY', bin2hex(random_bytes(32)));
  *    (generate once via PHP CLI, same as with the API key earlier)
  *  - Fallback: if no key is found, the plugin automatically generates
  *    one on first save and stores it in wp_options - this is weaker
@@ -27,7 +27,7 @@ if (!defined('ABSPATH')) {
 
 class Content2HTML_Crypto {
     private const CIPHER = 'aes-256-cbc';
-    private const FALLBACK_KEY_OPTION = 'wpstatic_deploy_fallback_key';
+    private const FALLBACK_KEY_OPTION = 'content2html_deploy_fallback_key';
 
     public static function encrypt(string $plaintext): string {
         if ($plaintext === '') {
@@ -75,12 +75,12 @@ class Content2HTML_Crypto {
      * the automatically generated DB fallback.
      */
     public static function usesConfigKey(): bool {
-        return defined('WPSTATIC_ENCRYPTION_KEY') && WPSTATIC_ENCRYPTION_KEY !== '';
+        return defined('CONTENT2HTML_ENCRYPTION_KEY') && CONTENT2HTML_ENCRYPTION_KEY !== '';
     }
 
     private static function getKey(): string {
         if (self::usesConfigKey()) {
-            return hash('sha256', WPSTATIC_ENCRYPTION_KEY, true);
+            return hash('sha256', CONTENT2HTML_ENCRYPTION_KEY, true);
         }
 
         $fallback = get_option(self::FALLBACK_KEY_OPTION);

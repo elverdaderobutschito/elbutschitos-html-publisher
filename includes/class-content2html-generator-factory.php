@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once WPSTATIC_DEPLOY_DIR . 'lib/class-content2html-generator.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'lib/class-content2html-generator.php';
 
 /**
  * Builds a Content2HTML_Generator instance that does NOT fetch its

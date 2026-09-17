@@ -365,18 +365,25 @@ class Content2HTML_Navigation {
         }
         unset($group);
 
-        $build = static function (int $parentId) use (&$build, $byParent): array {
+        $build = static function (int $parentId, array $visited) use (&$build, $byParent): array {
             $result = [];
 
             foreach ($byParent[$parentId] ?? [] as $entry) {
-                $entry['children'] = $build($entry['id']);
+                if (in_array($entry['id'], $visited, true)) {
+                    // Circular parent reference (e.g. corrupted menu data) -
+                    // stop recursing here instead of looping forever.
+                    $entry['children'] = [];
+                } else {
+                    $entry['children'] = $build($entry['id'], array_merge($visited, [$entry['id']]));
+                }
+
                 $result[] = $entry;
             }
 
             return $result;
         };
 
-        return $build(0);
+        return $build(0, []);
     }
 
     /**

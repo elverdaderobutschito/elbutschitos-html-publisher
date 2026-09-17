@@ -25,7 +25,7 @@
      * routing fields, plugin-internal markers such as Fluent Forms'
      * __fluent_protection_token_12, _fluentform_12_fluentformnonce,
      * _wp_http_referer etc.) - the same logic as in the PHP form handler
-     * (see form-handler-template.php), but applied here BEFORE the
+     * (see form-handler-template.txt), but applied here BEFORE the
      * actual submit, so neither Netlify nor the PHP handler ever gets to
      * see these fields at all.
      */
@@ -163,10 +163,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var scriptTag = document.querySelector('script[data-honeypot], script[src$="wpstatic-form-validate.js"]');
+        var scriptTag = document.querySelector('script[data-honeypot], script[src$="content2html-form-validate.js"]');
         var honeypotField = scriptTag ? (scriptTag.getAttribute('data-honeypot') || '') : '';
 
-        // Messages come from the server (see WPStatic_Forms::applyToGenerator())
+        // Messages come from the server (see Content2HTML_Forms::applyToGenerator())
         // translated into whatever language the WordPress install is
         // configured for - falls back to English if the script tag
         // doesn't carry them (e.g. if this file is used standalone).

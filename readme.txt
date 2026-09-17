@@ -51,7 +51,7 @@ No data is sent anywhere without an explicit action from you, and no usage track
 1. Upload the plugin files to the `/wp-content/plugins/content2html` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the "Plugins" screen in WordPress.
 3. Go to "Content2HTML" in the admin menu to configure a template, choose a deployment target (SFTP or Netlify), and set up any optional features (forms, navigation, Markdown export).
-4. Optional but recommended: define `WPSTATIC_ENCRYPTION_KEY` in `wp-config.php` before entering SFTP/Netlify credentials, so stored secrets are encrypted with a key that isn't stored in the database itself.
+4. Optional but recommended: define `CONTENT2HTML_ENCRYPTION_KEY` in `wp-config.php` before entering SFTP/Netlify credentials, so stored secrets are encrypted with a key that isn't stored in the database itself.
 
 == Frequently Asked Questions ==
 

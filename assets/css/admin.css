@@ -1,31 +1,31 @@
-.wpstatic-target-section {
+.content2html-target-section {
     border-left: 3px solid #ccd0d4;
     padding-left: 16px;
     margin: 16px 0;
 }
 
-#wpstatic-deploy-progress {
+#content2html-deploy-progress {
     margin-top: 12px;
 }
 
-#wpstatic-deploy-result p {
+#content2html-deploy-result p {
     margin: 4px 0;
 }
 
-.wpstatic-test-result {
+.content2html-test-result {
     margin-left: 8px;
     font-weight: 600;
 }
 
-.wpstatic-test-ok {
+.content2html-test-ok {
     color: #008a20;
 }
 
-.wpstatic-test-fail {
+.content2html-test-fail {
     color: #b32d2e;
 }
 
-#wpstatic-unsaved-notice {
+#content2html-unsaved-notice {
     position: sticky;
     top: 32px; /* Höhe der WP-Admin-Bar auf Desktop */
     z-index: 100;
@@ -33,20 +33,20 @@
 }
 
 @media screen and (max-width: 782px) {
-    #wpstatic-unsaved-notice {
+    #content2html-unsaved-notice {
         top: 46px; /* WP-Admin-Bar ist auf Mobile/Tablet höher */
     }
 }
 
-.wpstatic-tabs {
+.content2html-tabs {
     margin-bottom: 0;
 }
 
-.wpstatic-tab-panel {
+.content2html-tab-panel {
     display: none;
     padding-top: 10px;
 }
 
-.wpstatic-tab-panel.wpstatic-tab-active {
+.content2html-tab-panel.content2html-tab-active {
     display: block;
 }

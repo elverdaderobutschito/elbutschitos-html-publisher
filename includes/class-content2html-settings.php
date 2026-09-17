@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) {
 }
 
 class Content2HTML_Settings {
-    public const OPTION_KEY = 'wpstatic_deploy_settings';
-    private const NONCE_ACTION = 'wpstatic_deploy_settings_save';
+    public const OPTION_KEY = 'content2html_deploy_settings';
+    private const NONCE_ACTION = 'content2html_deploy_settings_save';
 
     // Fields whose values are stored encrypted in the DB (see
     // Content2HTML_Crypto). Everything else is stored as plain text in
@@ -20,8 +20,8 @@ class Content2HTML_Settings {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'registerMenu']);
-        add_action('admin_post_wpstatic_deploy_save_settings', [$this, 'handleSave']);
-        add_action('admin_post_wpstatic_export_markdown', [$this, 'handleMarkdownExport']);
+        add_action('admin_post_content2html_deploy_save_settings', [$this, 'handleSave']);
+        add_action('admin_post_content2html_export_markdown', [$this, 'handleMarkdownExport']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
 
@@ -129,24 +129,24 @@ class Content2HTML_Settings {
             __('Content2HTML', 'content2html'),
             __('Content2HTML', 'content2html'),
             'manage_options',
-            'wpstatic-deploy',
+            'content2html-deploy',
             [$this, 'renderPage'],
             'dashicons-migrate'
         );
     }
 
     public function enqueueAssets(string $hook): void {
-        if ($hook !== 'toplevel_page_wpstatic-deploy') {
+        if ($hook !== 'toplevel_page_content2html-deploy') {
             return;
         }
 
         wp_enqueue_media(); // for the template file upload
-        wp_enqueue_style('wpstatic-deploy-admin', WPSTATIC_DEPLOY_URL . 'assets/css/admin.css', [], WPSTATIC_DEPLOY_VERSION);
-        wp_enqueue_script('wpstatic-deploy-admin', WPSTATIC_DEPLOY_URL . 'assets/js/admin.js', ['jquery'], WPSTATIC_DEPLOY_VERSION, true);
+        wp_enqueue_style('content2html-deploy-admin', CONTENT2HTML_DEPLOY_URL . 'assets/css/admin.css', [], CONTENT2HTML_DEPLOY_VERSION);
+        wp_enqueue_script('content2html-deploy-admin', CONTENT2HTML_DEPLOY_URL . 'assets/js/admin.js', ['jquery'], CONTENT2HTML_DEPLOY_VERSION, true);
 
-        wp_localize_script('wpstatic-deploy-admin', 'wpStaticDeploy', [
+        wp_localize_script('content2html-deploy-admin', 'content2htmlDeploy', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpstatic_deploy_ajax'),
+            'nonce' => wp_create_nonce('content2html_deploy_ajax'),
             'batchSize' => 5,
             'i18n' => [
                 'testConnection' => __('Test connection', 'content2html'),
@@ -253,7 +253,7 @@ class Content2HTML_Settings {
             if (isset($uploaded['file'])) {
                 $newValues['template_path'] = $uploaded['file'];
             } else {
-                set_transient('wpstatic_template_upload_error', $uploaded['error'] ?? __('Unknown error while uploading the default template.', 'content2html'), MINUTE_IN_SECONDS * 5);
+                set_transient('content2html_template_upload_error', $uploaded['error'] ?? __('Unknown error while uploading the default template.', 'content2html'), MINUTE_IN_SECONDS * 5);
             }
         } elseif (!empty($_POST['template_path_existing'])) {
             $newValues['template_path'] = sanitize_text_field(wp_unslash($_POST['template_path_existing']));
@@ -290,18 +290,18 @@ class Content2HTML_Settings {
                         'path' => $uploadedTemplate['file'],
                     ];
                 } else {
-                    set_transient('wpstatic_template_upload_error', $uploadedTemplate['error'] ?? __('Unknown error while uploading.', 'content2html'), MINUTE_IN_SECONDS * 5);
+                    set_transient('content2html_template_upload_error', $uploadedTemplate['error'] ?? __('Unknown error while uploading.', 'content2html'), MINUTE_IN_SECONDS * 5);
                 }
             } elseif (isset($_FILES['new_template_file']['error']) && $_FILES['new_template_file']['error'] !== UPLOAD_ERR_NO_FILE) {
-                set_transient('wpstatic_template_upload_error', self::uploadErrorMessage((int) $_FILES['new_template_file']['error']), MINUTE_IN_SECONDS * 5);
+                set_transient('content2html_template_upload_error', self::uploadErrorMessage((int) $_FILES['new_template_file']['error']), MINUTE_IN_SECONDS * 5);
             } else {
-                set_transient('wpstatic_template_upload_error', __('A name for the new template was given, but no file was selected.', 'content2html'), MINUTE_IN_SECONDS * 5);
+                set_transient('content2html_template_upload_error', __('A name for the new template was given, but no file was selected.', 'content2html'), MINUTE_IN_SECONDS * 5);
             }
         } elseif (!empty($_FILES['new_template_file']['tmp_name'])) {
             // A common user error (the exact one we ran into ourselves):
             // a file was selected, but no name was given - previously
             // ignored silently, now with a clear message.
-            set_transient('wpstatic_template_upload_error', __('Please enter a name for the new template (required) - the file was therefore not saved.', 'content2html'), MINUTE_IN_SECONDS * 5);
+            set_transient('content2html_template_upload_error', __('Please enter a name for the new template (required) - the file was therefore not saved.', 'content2html'), MINUTE_IN_SECONDS * 5);
         }
 
         $newValues['extra_templates'] = $keepTemplates;
@@ -330,7 +330,7 @@ class Content2HTML_Settings {
 
         if ($newValues['forms_enabled'] === 'on' && $newValues['target'] === 'sftp' && $newValues['form_recipient_email'] === '') {
             set_transient(
-                'wpstatic_forms_warning',
+                'content2html_forms_warning',
                 __('Forms are enabled, but no recipient email address has been set - the form handler will reject incoming submissions until this is fixed.', 'content2html'),
                 MINUTE_IN_SECONDS * 5
             );
@@ -346,7 +346,7 @@ class Content2HTML_Settings {
 
             if ($redirectHost !== null && $redirectHost === $ownHost) {
                 set_transient(
-                    'wpstatic_forms_warning',
+                    'content2html_forms_warning',
                     sprintf(
                         /* translators: %s: hostname */
                         __('The form "thank you" page points to your WordPress domain (%s). With Netlify as the target, the form would then submit DIRECTLY to WordPress instead of Netlify - the submission would never show up in Netlify\'s Forms overview. Please leave it empty or enter a relative address on the Netlify site itself (e.g. /thank-you/).', 'content2html'),
@@ -374,12 +374,12 @@ class Content2HTML_Settings {
                     : ['ok' => false, 'message' => __('Unknown error while uploading.', 'content2html'), 'warnings' => []];
             }
 
-            set_transient('wpstatic_assets_upload_result', $assetsResult, MINUTE_IN_SECONDS * 5);
+            set_transient('content2html_assets_upload_result', $assetsResult, MINUTE_IN_SECONDS * 5);
         } elseif (!empty($_SERVER['CONTENT_LENGTH']) && (int) $_SERVER['CONTENT_LENGTH'] > self::iniSizeToBytes(ini_get('post_max_size'))) {
             // post_max_size exceeded: PHP then discards the entire request
             // body including $_FILES, without any error code - this is
             // the only way to detect it indirectly.
-            set_transient('wpstatic_assets_upload_result', [
+            set_transient('content2html_assets_upload_result', [
                 'ok' => false,
                 'message' => sprintf(
                     /* translators: %s: post_max_size ini value */
@@ -390,7 +390,7 @@ class Content2HTML_Settings {
             ], MINUTE_IN_SECONDS * 5);
         }
 
-        wp_safe_redirect(add_query_arg(['page' => 'wpstatic-deploy', 'saved' => '1'], admin_url('admin.php')));
+        wp_safe_redirect(add_query_arg(['page' => 'content2html-deploy', 'saved' => '1'], admin_url('admin.php')));
         exit;
     }
 
@@ -416,7 +416,7 @@ class Content2HTML_Settings {
             wp_die(esc_html__('Insufficient permissions.', 'content2html'));
         }
 
-        check_admin_referer('wpstatic_export_markdown');
+        check_admin_referer('content2html_export_markdown');
 
         $settings = self::getSettings();
         $localizeImages = !empty($_POST['markdown_localize_images']);
@@ -457,17 +457,17 @@ class Content2HTML_Settings {
         $menus = wp_get_nav_menus();
         ?>
         <h3><?php echo esc_html($label); ?></h3>
-        <table class="form-table wpstatic-nav-fields" data-prefix="<?php echo esc_attr($prefix); ?>">
+        <table class="form-table content2html-nav-fields" data-prefix="<?php echo esc_attr($prefix); ?>">
             <tr>
                 <th><?php esc_html_e('Generate automatically', 'content2html'); ?></th>
                 <td>
                     <label>
-                        <input type="checkbox" class="wpstatic-nav-enabled" name="<?php echo esc_attr($prefix); ?>enabled" <?php checked('on', $settings[$prefix . 'enabled']); ?>>
+                        <input type="checkbox" class="content2html-nav-enabled" name="<?php echo esc_attr($prefix); ?>enabled" <?php checked('on', $settings[$prefix . 'enabled']); ?>>
                         <?php esc_html_e('Replace navigation markers in the template with real menu items', 'content2html'); ?>
                     </label>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>menu_id"><?php esc_html_e('WordPress menu', 'content2html'); ?></label></th>
                 <td>
                     <select id="<?php echo esc_attr($prefix); ?>menu_id" name="<?php echo esc_attr($prefix); ?>menu_id">
@@ -483,35 +483,35 @@ class Content2HTML_Settings {
                     <?php endif; ?>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>wrapper_marker"><?php esc_html_e('Wrapper marker', 'content2html'); ?></label></th>
                 <td>
                     <input type="text" id="<?php echo esc_attr($prefix); ?>wrapper_marker" name="<?php echo esc_attr($prefix); ?>wrapper_marker" value="<?php echo esc_attr($settings[$prefix . 'wrapper_marker']); ?>" class="regular-text">
                     <p class="description"><?php esc_html_e('Wraps the ENTIRE menu area in the template (e.g. the outer <ul>).', 'content2html'); ?></p>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>item_marker"><?php esc_html_e('Item marker', 'content2html'); ?></label></th>
                 <td>
                     <input type="text" id="<?php echo esc_attr($prefix); ?>item_marker" name="<?php echo esc_attr($prefix); ?>item_marker" value="<?php echo esc_attr($settings[$prefix . 'item_marker']); ?>" class="regular-text">
                     <p class="description"><?php esc_html_e('Wraps EXACTLY ONE demo menu item without sub-items (e.g. one <li>) - duplicated for each real menu item.', 'content2html'); ?></p>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>parent_item_marker"><?php esc_html_e('Parent item marker (optional)', 'content2html'); ?></label></th>
                 <td>
                     <input type="text" id="<?php echo esc_attr($prefix); ?>parent_item_marker" name="<?php echo esc_attr($prefix); ?>parent_item_marker" value="<?php echo esc_attr($settings[$prefix . 'parent_item_marker']); ?>" class="regular-text">
                     <p class="description"><?php esc_html_e('Only needed for multi-level menus. Without this marker, sub-items are ignored (flat display).', 'content2html'); ?></p>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>submenu_wrapper_marker"><?php esc_html_e('Submenu wrapper marker', 'content2html'); ?></label></th>
                 <td>
                     <input type="text" id="<?php echo esc_attr($prefix); ?>submenu_wrapper_marker" name="<?php echo esc_attr($prefix); ?>submenu_wrapper_marker" value="<?php echo esc_attr($settings[$prefix . 'submenu_wrapper_marker']); ?>" class="regular-text">
                     <p class="description"><?php esc_html_e('Only relevant if "Parent item marker" is set - wraps the container for sub-items INSIDE the parent template.', 'content2html'); ?></p>
                 </td>
             </tr>
-            <tr class="wpstatic-nav-detail">
+            <tr class="content2html-nav-detail">
                 <th><label for="<?php echo esc_attr($prefix); ?>submenu_item_marker"><?php esc_html_e('Submenu item marker (optional)', 'content2html'); ?></label></th>
                 <td>
                     <input type="text" id="<?php echo esc_attr($prefix); ?>submenu_item_marker" name="<?php echo esc_attr($prefix); ?>submenu_item_marker" value="<?php echo esc_attr($settings[$prefix . 'submenu_item_marker']); ?>" class="regular-text">
@@ -560,12 +560,12 @@ class Content2HTML_Settings {
         }
 
         $settings = $this->getRawSettingsForForm();
-        $hasVendor = file_exists(WPSTATIC_DEPLOY_DIR . 'vendor/autoload.php');
+        $hasVendor = file_exists(CONTENT2HTML_DEPLOY_DIR . 'vendor/autoload.php');
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Content2HTML – Settings', 'content2html'); ?></h1>
 
-            <div id="wpstatic-unsaved-notice" class="notice notice-warning" style="display:none;">
+            <div id="content2html-unsaved-notice" class="notice notice-warning" style="display:none;">
                 <p>
                     <strong><?php esc_html_e('You have unsaved changes.', 'content2html'); ?></strong>
                     <?php esc_html_e('"Deploy all" and "Deploy assets only" use the last', 'content2html'); ?>
@@ -585,15 +585,15 @@ class Content2HTML_Settings {
             <?php endif; ?>
 
             <?php
-            $assetsUploadResult = get_transient('wpstatic_assets_upload_result');
+            $assetsUploadResult = get_transient('content2html_assets_upload_result');
             if ($assetsUploadResult) {
-                delete_transient('wpstatic_assets_upload_result');
+                delete_transient('content2html_assets_upload_result');
                 $noticeClass = $assetsUploadResult['ok'] ? 'notice-success' : 'notice-error';
                 ?>
                 <div class="notice <?php echo esc_attr($noticeClass); ?> is-dismissible">
                     <p><?php echo esc_html($assetsUploadResult['message']); ?></p>
                     <?php if (!empty($assetsUploadResult['warnings'])): ?>
-                        <p><strong><?php esc_html_e('Note: potentially executable file types were found and removed from the assets for security reasons', 'content2html'); ?></strong>:</p>
+                        <p><strong><?php esc_html_e('Note: only CSS, JS, font and image files are kept - anything else found in the ZIP was removed', 'content2html'); ?></strong>:</p>
                         <ul style="list-style: disc; margin-left: 20px;">
                             <?php foreach ($assetsUploadResult['warnings'] as $warning): ?>
                                 <li><code><?php echo esc_html($warning); ?></code></li>
@@ -606,9 +606,9 @@ class Content2HTML_Settings {
             ?>
 
             <?php
-            $templateUploadError = get_transient('wpstatic_template_upload_error');
+            $templateUploadError = get_transient('content2html_template_upload_error');
             if ($templateUploadError) {
-                delete_transient('wpstatic_template_upload_error');
+                delete_transient('content2html_template_upload_error');
                 ?>
                 <div class="notice notice-error is-dismissible">
                     <p><strong>Template-Upload fehlgeschlagen:</strong> <?php echo esc_html($templateUploadError); ?></p>
@@ -616,9 +616,9 @@ class Content2HTML_Settings {
                 <?php
             }
 
-            $formsWarning = get_transient('wpstatic_forms_warning');
+            $formsWarning = get_transient('content2html_forms_warning');
             if ($formsWarning) {
-                delete_transient('wpstatic_forms_warning');
+                delete_transient('content2html_forms_warning');
                 ?>
                 <div class="notice notice-warning is-dismissible">
                     <p><?php echo esc_html($formsWarning); ?></p>
@@ -630,9 +630,9 @@ class Content2HTML_Settings {
             <?php if (!Content2HTML_Crypto::usesConfigKey()): ?>
                 <div class="notice notice-warning">
                     <p>
-                        <?php esc_html_e('No', 'content2html'); ?> <code>WPSTATIC_ENCRYPTION_KEY</code> <?php esc_html_e('found in', 'content2html'); ?> <code>wp-config.php</code>.
+                        <?php esc_html_e('No', 'content2html'); ?> <code>CONTENT2HTML_ENCRYPTION_KEY</code> <?php esc_html_e('found in', 'content2html'); ?> <code>wp-config.php</code>.
                         <?php esc_html_e('Secrets are still stored encrypted, but with an auto-generated key that also lives in the database. Recommended:', 'content2html'); ?>
-                        <code>define('WPSTATIC_ENCRYPTION_KEY', '<?php esc_html_e('a-long-random-value', 'content2html'); ?>');</code>
+                        <code>define('CONTENT2HTML_ENCRYPTION_KEY', '<?php esc_html_e('a-long-random-value', 'content2html'); ?>');</code>
                         <?php esc_html_e('add to wp-config.php.', 'content2html'); ?>
                     </p>
                 </div>
@@ -646,11 +646,11 @@ class Content2HTML_Settings {
                 </div>
             <?php endif; ?>
 
-            <form id="wpstatic-settings-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="wpstatic_deploy_save_settings">
+            <form id="content2html-settings-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="content2html_deploy_save_settings">
                 <?php wp_nonce_field(self::NONCE_ACTION); ?>
 
-                <h2 class="nav-tab-wrapper wpstatic-tabs">
+                <h2 class="nav-tab-wrapper content2html-tabs">
                     <a href="#" class="nav-tab" data-tab="inhalte"><?php esc_html_e('Content', 'content2html'); ?></a>
                     <a href="#" class="nav-tab" data-tab="navigation"><?php esc_html_e('Navigation', 'content2html'); ?></a>
                     <a href="#" class="nav-tab" data-tab="formulare"><?php esc_html_e('Forms', 'content2html'); ?></a>
@@ -658,7 +658,7 @@ class Content2HTML_Settings {
                     <a href="#" class="nav-tab" data-tab="markdown"><?php esc_html_e('Markdown export', 'content2html'); ?></a>
                 </h2>
 
-                <div class="wpstatic-tab-panel" data-tab-panel="inhalte">
+                <div class="content2html-tab-panel" data-tab-panel="inhalte">
                 <h2 class="title"><?php esc_html_e('Content', 'content2html'); ?></h2>
                 <table class="form-table">
                     <tr>
@@ -669,13 +669,13 @@ class Content2HTML_Settings {
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="wpstatic_template"><?php esc_html_e('Template file', 'content2html'); ?></label></th>
+                        <th><label for="content2html_template"><?php esc_html_e('Template file', 'content2html'); ?></label></th>
                         <td>
                             <?php if (!empty($settings['template_path'])): ?>
                                 <p><?php esc_html_e('Current:', 'content2html'); ?> <code><?php echo esc_html(basename($settings['template_path'])); ?></code></p>
                                 <input type="hidden" name="template_path_existing" value="<?php echo esc_attr($settings['template_path']); ?>">
                             <?php endif; ?>
-                            <input type="file" id="wpstatic_template" name="template_file" accept=".html,.htm">
+                            <input type="file" id="content2html_template" name="template_file" accept=".html,.htm">
                             <p class="description"><?php esc_html_e('HTML file with placeholders (e.g.', 'content2html'); ?> <code>###title###</code>). <?php esc_html_e('Leave empty to keep the current file.', 'content2html'); ?></p>
                         </td>
                     </tr>
@@ -710,7 +710,7 @@ class Content2HTML_Settings {
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="wpstatic_assets">Assets (CSS/JS/Fonts/Images)</label></th>
+                        <th><label for="content2html_assets">Assets (CSS/JS/Fonts/Images)</label></th>
                         <td>
                             <?php $assetsStatus = Content2HTML_AssetsManager::getStatus(); ?>
                             <?php if ($assetsStatus['exists']): ?>
@@ -724,7 +724,7 @@ class Content2HTML_Settings {
                             <?php else: ?>
                                 <p><?php esc_html_e('No assets set up yet.', 'content2html'); ?></p>
                             <?php endif; ?>
-                            <input type="file" id="wpstatic_assets" name="assets_zip" accept=".zip">
+                            <input type="file" id="content2html_assets" name="assets_zip" accept=".zip">
                             <p class="description">
                                 <?php esc_html_e('ZIP file whose root already is a folder named', 'content2html'); ?> <code>assets/</code>
                                 (<?php esc_html_e('i.e. zip the assets folder itself, not just its contents', 'content2html'); ?>).
@@ -760,7 +760,7 @@ class Content2HTML_Settings {
                 </table>
                 </div>
 
-                <div class="wpstatic-tab-panel" data-tab-panel="formulare">
+                <div class="content2html-tab-panel" data-tab-panel="formulare">
                 <h2 class="title"><?php esc_html_e('Forms', 'content2html'); ?></h2>
                 <table class="form-table">
                     <tr>
@@ -827,7 +827,7 @@ class Content2HTML_Settings {
                 </p>
                 </div>
 
-                <div class="wpstatic-tab-panel" data-tab-panel="navigation">
+                <div class="content2html-tab-panel" data-tab-panel="navigation">
                 <h2 class="title"><?php esc_html_e('Navigation', 'content2html'); ?></h2>
                 <p class="description">
                     <?php esc_html_e('Replaces marker comments in the template with real menu items from a WordPress menu. Details for each marker are right next to the respective fields below.', 'content2html'); ?>
@@ -845,20 +845,20 @@ class Content2HTML_Settings {
                 </table>
                 </div>
 
-                <div class="wpstatic-tab-panel" data-tab-panel="ziel">
+                <div class="content2html-tab-panel" data-tab-panel="ziel">
                 <h2 class="title"><?php esc_html_e('Deployment target', 'content2html'); ?></h2>
                 <table class="form-table">
                     <tr>
                         <th><?php esc_html_e('Target', 'content2html'); ?></th>
                         <td>
-                            <label><input type="radio" name="target" value="sftp" <?php checked('sftp', $settings['target']); ?> class="wpstatic-target-radio"> SFTP</label>
+                            <label><input type="radio" name="target" value="sftp" <?php checked('sftp', $settings['target']); ?> class="content2html-target-radio"> SFTP</label>
                             &nbsp;&nbsp;
-                            <label><input type="radio" name="target" value="netlify" <?php checked('netlify', $settings['target']); ?> class="wpstatic-target-radio"> Netlify</label>
+                            <label><input type="radio" name="target" value="netlify" <?php checked('netlify', $settings['target']); ?> class="content2html-target-radio"> Netlify</label>
                         </td>
                     </tr>
                 </table>
 
-                <div id="wpstatic-target-netlify" class="wpstatic-target-section">
+                <div id="content2html-target-netlify" class="content2html-target-section">
                     <h3>Netlify</h3>
                     <table class="form-table">
                         <tr>
@@ -874,15 +874,15 @@ class Content2HTML_Settings {
                         </tr>
                     </table>
                     <p>
-                        <button type="button" class="button" id="wpstatic-test-netlify-btn"><?php esc_html_e('Test connection', 'content2html'); ?></button>
-                        <span id="wpstatic-test-netlify-result" class="wpstatic-test-result"></span>
+                        <button type="button" class="button" id="content2html-test-netlify-btn"><?php esc_html_e('Test connection', 'content2html'); ?></button>
+                        <span id="content2html-test-netlify-result" class="content2html-test-result"></span>
                     </p>
                     <p class="description">
                         <?php esc_html_e('Important: Netlify deploys always replace the entire site content. The single-page button (on every post/page edit screen) therefore triggers a full rebuild + redeploy on Netlify, not just an update of that one page.', 'content2html'); ?>
                     </p>
                 </div>
 
-                <div id="wpstatic-target-sftp" class="wpstatic-target-section">
+                <div id="content2html-target-sftp" class="content2html-target-section">
                     <h3>SFTP</h3>
                     <table class="form-table">
                         <tr>
@@ -900,26 +900,26 @@ class Content2HTML_Settings {
                         <tr>
                             <th><?php esc_html_e('Authentication', 'content2html'); ?></th>
                             <td>
-                                <label><input type="radio" name="sftp_auth_method" value="password" <?php checked('password', $settings['sftp_auth_method']); ?> class="wpstatic-sftp-auth-radio"> <?php esc_html_e('Password', 'content2html'); ?></label>
+                                <label><input type="radio" name="sftp_auth_method" value="password" <?php checked('password', $settings['sftp_auth_method']); ?> class="content2html-sftp-auth-radio"> <?php esc_html_e('Password', 'content2html'); ?></label>
                                 &nbsp;&nbsp;
-                                <label><input type="radio" name="sftp_auth_method" value="key" <?php checked('key', $settings['sftp_auth_method']); ?> class="wpstatic-sftp-auth-radio"> <?php esc_html_e('Private key', 'content2html'); ?></label>
+                                <label><input type="radio" name="sftp_auth_method" value="key" <?php checked('key', $settings['sftp_auth_method']); ?> class="content2html-sftp-auth-radio"> <?php esc_html_e('Private key', 'content2html'); ?></label>
                             </td>
                         </tr>
-                        <tr class="wpstatic-sftp-auth-password">
+                        <tr class="content2html-sftp-auth-password">
                             <th><label for="sftp_password"><?php esc_html_e('Password', 'content2html'); ?></label></th>
                             <td>
                                 <input type="password" id="sftp_password" name="sftp_password" value="" class="regular-text" autocomplete="new-password">
                                 <p class="description"><?php echo !empty($settings['sftp_password']) ? esc_html__('Already saved. Leave empty to keep it.', 'content2html') : ''; ?></p>
                             </td>
                         </tr>
-                        <tr class="wpstatic-sftp-auth-key">
+                        <tr class="content2html-sftp-auth-key">
                             <th><label for="sftp_private_key"><?php esc_html_e('Private key (PEM)', 'content2html'); ?></label></th>
                             <td>
                                 <textarea id="sftp_private_key" name="sftp_private_key" rows="6" class="large-text code" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
                                 <p class="description"><?php echo !empty($settings['sftp_private_key']) ? esc_html__('Already saved. Leave empty to keep it.', 'content2html') : ''; ?></p>
                             </td>
                         </tr>
-                        <tr class="wpstatic-sftp-auth-key">
+                        <tr class="content2html-sftp-auth-key">
                             <th><label for="sftp_passphrase"><?php esc_html_e('Passphrase (if any)', 'content2html'); ?></label></th>
                             <td><input type="password" id="sftp_passphrase" name="sftp_passphrase" value="" class="regular-text" autocomplete="new-password"></td>
                         </tr>
@@ -929,56 +929,56 @@ class Content2HTML_Settings {
                         </tr>
                     </table>
                     <p>
-                        <button type="button" class="button" id="wpstatic-test-sftp-btn"><?php esc_html_e('Test connection', 'content2html'); ?></button>
-                        <span id="wpstatic-test-sftp-result" class="wpstatic-test-result"></span>
+                        <button type="button" class="button" id="content2html-test-sftp-btn"><?php esc_html_e('Test connection', 'content2html'); ?></button>
+                        <span id="content2html-test-sftp-result" class="content2html-test-result"></span>
                     </p>
                 </div>
                 </div>
 
-                <div id="wpstatic-save-button-wrap">
+                <div id="content2html-save-button-wrap">
                 <?php submit_button(__('Save settings', 'content2html')); ?>
                 </div>
             </form>
 
             <hr>
 
-            <div id="wpstatic-transfer-section">
+            <div id="content2html-transfer-section">
             <h2 class="title"><?php esc_html_e('Deployment', 'content2html'); ?></h2>
             <p>
-                <button type="button" class="button button-primary button-hero" id="wpstatic-deploy-all-btn">
+                <button type="button" class="button button-primary button-hero" id="content2html-deploy-all-btn">
                     <?php esc_html_e('Deploy all', 'content2html'); ?>
                 </button>
-                <button type="button" class="button" id="wpstatic-deploy-assets-only-btn" <?php echo $assetsStatus['exists'] ? '' : 'disabled'; ?>>
+                <button type="button" class="button" id="content2html-deploy-assets-only-btn" <?php echo $assetsStatus['exists'] ? '' : 'disabled'; ?>>
                     <?php esc_html_e('Deploy assets only', 'content2html'); ?>
                 </button>
             </p>
             <p>
                 <label>
-                    <input type="checkbox" id="wpstatic-skip-assets" checked>
+                    <input type="checkbox" id="content2html-skip-assets" checked>
                     <?php esc_html_e('Upload assets when deploying', 'content2html'); ?>
                 </label>
                 <?php if ($settings['target'] === 'netlify'): ?>
                     <br><span class="description"><?php esc_html_e('On Netlify, assets are always uploaded (a deploy replaces the entire content) - this option has no effect here.', 'content2html'); ?></span>
                 <?php endif; ?>
             </p>
-            <div id="wpstatic-deploy-progress" style="display:none; max-width: 500px;">
-                <progress id="wpstatic-deploy-progress-bar" value="0" max="100" style="width:100%;"></progress>
-                <p id="wpstatic-deploy-progress-text"></p>
+            <div id="content2html-deploy-progress" style="display:none; max-width: 500px;">
+                <progress id="content2html-deploy-progress-bar" value="0" max="100" style="width:100%;"></progress>
+                <p id="content2html-deploy-progress-text"></p>
             </div>
-            <div id="wpstatic-deploy-result"></div>
+            <div id="content2html-deploy-result"></div>
             </div>
 
-            <hr id="wpstatic-transfer-hr">
+            <hr id="content2html-transfer-hr">
 
-            <div class="wpstatic-tab-panel" data-tab-panel="markdown">
+            <div class="content2html-tab-panel" data-tab-panel="markdown">
             <h2 class="title"><?php esc_html_e('Markdown export', 'content2html'); ?></h2>
             <p class="description">
                 <?php esc_html_e('Exports all posts/pages as plain', 'content2html'); ?> <code>.md</code> <?php esc_html_e('files with YAML front matter (title, date, slug) - meant for other systems (Hugo, Jekyll, Eleventy, Obsidian vault etc.),', 'content2html'); ?>
                 <strong><?php esc_html_e('not', 'content2html'); ?></strong> <?php esc_html_e('as a deployable website. Runs independently of SFTP/Netlify; the result is a direct ZIP download.', 'content2html'); ?>
             </p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <input type="hidden" name="action" value="wpstatic_export_markdown">
-                <?php wp_nonce_field('wpstatic_export_markdown'); ?>
+                <input type="hidden" name="action" value="content2html_export_markdown">
+                <?php wp_nonce_field('content2html_export_markdown'); ?>
                 <p>
                     <label>
                         <input type="checkbox" name="markdown_localize_images" value="1" checked>

@@ -18,7 +18,7 @@
  *     the generateStatic.php setup, for consistent behavior).
  *  2. For SFTP: phpseclib is already included with its own autoloader
  *     (see vendor/), no composer install needed.
- *  3. Recommended: define WPSTATIC_ENCRYPTION_KEY in wp-config.php (see
+ *  3. Recommended: define CONTENT2HTML_ENCRYPTION_KEY in wp-config.php (see
  *     README.md) before entering SFTP/Netlify credentials.
  */
 
@@ -26,9 +26,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPSTATIC_DEPLOY_VERSION', '1.0.0');
-define('WPSTATIC_DEPLOY_DIR', plugin_dir_path(__FILE__));
-define('WPSTATIC_DEPLOY_URL', plugin_dir_url(__FILE__));
+define('CONTENT2HTML_DEPLOY_VERSION', '1.0.0');
+define('CONTENT2HTML_DEPLOY_DIR', plugin_dir_path(__FILE__));
+define('CONTENT2HTML_DEPLOY_URL', plugin_dir_url(__FILE__));
 
 // Hooked on init rather than plugins_loaded, per current WordPress.org
 // guidance (loading translations on plugins_loaded happens too early
@@ -38,6 +38,7 @@ define('WPSTATIC_DEPLOY_URL', plugin_dir_url(__FILE__));
 // loading WordPress.org provides doesn't apply - there, this is what
 // makes the bundled languages/content2html-de_DE.mo file work.
 add_action('init', function () {
+    // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- deliberate, see the comment above this hook: needed for the GitHub distribution, where WordPress.org's automatic translation loading doesn't apply.
     load_plugin_textdomain('content2html', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
 
@@ -56,7 +57,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
-if (!file_exists(WPSTATIC_DEPLOY_DIR . 'lib/simple_html_dom.php')) {
+if (!file_exists(CONTENT2HTML_DEPLOY_DIR . 'lib/simple_html_dom.php')) {
     add_action('admin_notices', function () {
         echo '<div class="notice notice-error"><p>'
             /* translators: %s: file path */
@@ -69,24 +70,24 @@ if (!file_exists(WPSTATIC_DEPLOY_DIR . 'lib/simple_html_dom.php')) {
 // Composer autoloader (phpseclib etc.), if present. If missing, only the
 // SFTP functionality is limited - the rest of the plugin (generation,
 // Netlify) still works.
-if (file_exists(WPSTATIC_DEPLOY_DIR . 'vendor/autoload.php')) {
-    require_once WPSTATIC_DEPLOY_DIR . 'vendor/autoload.php';
+if (file_exists(CONTENT2HTML_DEPLOY_DIR . 'vendor/autoload.php')) {
+    require_once CONTENT2HTML_DEPLOY_DIR . 'vendor/autoload.php';
 }
 
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-filesystem.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-crypto.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-settings.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-generator-factory.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-assets-manager.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-forms.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-markdown-export.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-navigation.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/interface-content2html-uploader.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-sftp-uploader.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-netlify-uploader.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-batch-controller.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-ajax.php';
-require_once WPSTATIC_DEPLOY_DIR . 'includes/class-content2html-metabox.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-filesystem.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-crypto.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-settings.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-generator-factory.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-assets-manager.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-forms.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-markdown-export.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-navigation.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/interface-content2html-uploader.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-sftp-uploader.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-netlify-uploader.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-batch-controller.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-ajax.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-metabox.php';
 
 add_action('plugins_loaded', function () {
     new Content2HTML_Settings();

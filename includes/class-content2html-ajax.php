@@ -5,18 +5,18 @@ if (!defined('ABSPATH')) {
 }
 
 class Content2HTML_AjaxController {
-    private const NONCE_ACTION = 'wpstatic_deploy_ajax';
-    private const QUEUE_TRANSIENT_PREFIX = 'wpstatic_deploy_queue_';
-    private const FRONT_FILE_TRANSIENT_PREFIX = 'wpstatic_deploy_frontfile_';
+    private const NONCE_ACTION = 'content2html_deploy_ajax';
+    private const QUEUE_TRANSIENT_PREFIX = 'content2html_deploy_queue_';
+    private const FRONT_FILE_TRANSIENT_PREFIX = 'content2html_deploy_frontfile_';
 
     public function __construct() {
-        add_action('wp_ajax_wpstatic_deploy_start', [$this, 'handleStart']);
-        add_action('wp_ajax_wpstatic_deploy_batch', [$this, 'handleBatch']);
-        add_action('wp_ajax_wpstatic_deploy_finalize', [$this, 'handleFinalize']);
-        add_action('wp_ajax_wpstatic_deploy_single', [$this, 'handleSingle']);
-        add_action('wp_ajax_wpstatic_deploy_assets_only', [$this, 'handleAssetsOnly']);
-        add_action('wp_ajax_wpstatic_deploy_test_sftp', [$this, 'handleTestSftp']);
-        add_action('wp_ajax_wpstatic_deploy_test_netlify', [$this, 'handleTestNetlify']);
+        add_action('wp_ajax_content2html_deploy_start', [$this, 'handleStart']);
+        add_action('wp_ajax_content2html_deploy_batch', [$this, 'handleBatch']);
+        add_action('wp_ajax_content2html_deploy_finalize', [$this, 'handleFinalize']);
+        add_action('wp_ajax_content2html_deploy_single', [$this, 'handleSingle']);
+        add_action('wp_ajax_content2html_deploy_assets_only', [$this, 'handleAssetsOnly']);
+        add_action('wp_ajax_content2html_deploy_test_sftp', [$this, 'handleTestSftp']);
+        add_action('wp_ajax_content2html_deploy_test_netlify', [$this, 'handleTestNetlify']);
     }
 
     private function checkAccess(): void {
@@ -66,7 +66,9 @@ class Content2HTML_AjaxController {
     public function handleBatch(): void {
         $this->checkAccess();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $offset = isset($_POST['offset']) ? max(0, (int) $_POST['offset']) : 0;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $batchSize = isset($_POST['batch_size']) ? max(1, (int) $_POST['batch_size']) : 5;
 
         $queue = get_transient($this->queueTransientKey());
@@ -107,6 +109,7 @@ class Content2HTML_AjaxController {
     public function handleFinalize(): void {
         $this->checkAccess();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $skipAssets = sanitize_text_field(wp_unslash($_POST['skip_assets'] ?? '')) === '1';
 
         try {
@@ -156,6 +159,7 @@ class Content2HTML_AjaxController {
     public function handleSingle(): void {
         $this->checkAccess();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $postId = isset($_POST['post_id']) ? absint($_POST['post_id']) : 0;
         $post = $postId ? get_post($postId) : null;
 
@@ -175,6 +179,7 @@ class Content2HTML_AjaxController {
                 // replaces the entire site content (see the note in the
                 // settings). So here: regenerate all pages and do a full
                 // redeploy.
+                // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- deliberate: this batch export can genuinely run long on larger sites, and the default PHP time limit would otherwise abort a legitimate, user-initiated deploy partway through.
                 set_time_limit(0); // can take a while on larger sites
 
                 Content2HTML_BatchController::resetBuildDir();
@@ -279,6 +284,7 @@ class Content2HTML_AjaxController {
 
         $existing = Content2HTML_Settings::getSettings();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $rawAuthMethod = sanitize_key(wp_unslash($_POST['sftp_auth_method'] ?? ''));
 
         // Deliberately NOT run through sanitize_text_field() or similar:
@@ -288,16 +294,19 @@ class Content2HTML_AjaxController {
         // from a multi-line PEM private key). wp_unslash() alone is
         // sufficient - never echoed back as HTML, only used to attempt
         // an SFTP connection.
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified above in checkAccess(); these are opaque secret values where sanitize_text_field() could corrupt the exact value needed to authenticate (e.g. stripping newlines from a multi-line PEM private key).
         $rawPassword = wp_unslash($_POST['sftp_password'] ?? '');
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified above in checkAccess(); these are opaque secret values where sanitize_text_field() could corrupt the exact value needed to authenticate (e.g. stripping newlines from a multi-line PEM private key).
         $rawPrivateKey = wp_unslash($_POST['sftp_private_key'] ?? '');
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified above in checkAccess(); these are opaque secret values where sanitize_text_field() could corrupt the exact value needed to authenticate (e.g. stripping newlines from a multi-line PEM private key).
         $rawPassphrase = wp_unslash($_POST['sftp_passphrase'] ?? '');
 
         $settings = [
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
             'sftp_host' => sanitize_text_field(wp_unslash($_POST['sftp_host'] ?? '')),
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
             'sftp_port' => max(1, absint(wp_unslash($_POST['sftp_port'] ?? 22))),
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
             'sftp_username' => sanitize_text_field(wp_unslash($_POST['sftp_username'] ?? '')),
             'sftp_auth_method' => in_array($rawAuthMethod, ['password', 'key'], true)
                 ? $rawAuthMethod
@@ -305,6 +314,7 @@ class Content2HTML_AjaxController {
             'sftp_password' => $rawPassword !== '' ? $rawPassword : $existing['sftp_password'],
             'sftp_private_key' => $rawPrivateKey !== '' ? $rawPrivateKey : $existing['sftp_private_key'],
             'sftp_passphrase' => $rawPassphrase !== '' ? $rawPassphrase : $existing['sftp_passphrase'],
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
             'sftp_remote_base_path' => '/' . ltrim(sanitize_text_field(wp_unslash($_POST['sftp_remote_base_path'] ?? '/')), '/'),
         ];
 
@@ -326,10 +336,11 @@ class Content2HTML_AjaxController {
         // Deliberately NOT sanitize_text_field()'d - an opaque API
         // token, never echoed back as HTML (see the same note above for
         // the SFTP credentials).
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce verified above in checkAccess(); these are opaque secret values where sanitize_text_field() could corrupt the exact value needed to authenticate (e.g. stripping newlines from a multi-line PEM private key).
         $rawToken = wp_unslash($_POST['netlify_token'] ?? '');
 
         $settings = [
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
             'netlify_site_id' => sanitize_text_field(wp_unslash($_POST['netlify_site_id'] ?? '')),
             'netlify_token' => $rawToken !== '' ? $rawToken : $existing['netlify_token'],
         ];

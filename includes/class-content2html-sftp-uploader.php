@@ -114,6 +114,23 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
     }
 
     public function uploadFile(string $localPath, string $relativePath): void {
+        // Files that are locally kept under a harmless, non-executable
+        // dummy name (form handler, .htaccess, validation script - see
+        // Content2HTML_Forms::SFTP_DUMMY_TO_REAL_FILENAME) are renamed to
+        // their real, active name only now, at actual upload time.
+        $dirname = dirname($relativePath);
+        $basename = basename($relativePath);
+        $renameMap = Content2HTML_Forms::getSftpDummyToRealFilenameMap();
+
+        if (isset($renameMap[$basename])) {
+            $relativePath = ($dirname === '.' ? '' : $dirname . '/') . $renameMap[$basename];
+        } elseif (substr($basename, -11) === '.source.txt') {
+            // Generic pattern for asset JS files (arbitrary names/nested
+            // paths, so no fixed lookup table works here) - see
+            // Content2HTML_AssetsManager::copyToBuild().
+            $relativePath = ($dirname === '.' ? '' : $dirname . '/') . substr($basename, 0, -11);
+        }
+
         $remotePath = $this->remoteBasePath . '/' . ltrim($relativePath, '/');
         $remoteDir = dirname($remotePath);
 

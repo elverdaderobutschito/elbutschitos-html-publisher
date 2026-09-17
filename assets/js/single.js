@@ -1,19 +1,19 @@
 jQuery(function ($) {
     'use strict';
 
-    var i18n = (typeof wpStaticDeploySingle !== 'undefined' && wpStaticDeploySingle.i18n) ? wpStaticDeploySingle.i18n : {};
+    var i18n = (typeof content2htmlDeploySingle !== 'undefined' && content2htmlDeploySingle.i18n) ? content2htmlDeploySingle.i18n : {};
 
-    $('#wpstatic-deploy-single-btn').on('click', function () {
+    $('#content2html-deploy-single-btn').on('click', function () {
         var $btn = $(this);
-        var $status = $('#wpstatic-deploy-single-status');
+        var $status = $('#content2html-deploy-single-status');
         var postId = $btn.data('post-id');
 
         $btn.prop('disabled', true).text(i18n.deploying);
         $status.text('');
 
-        $.post(wpStaticDeploySingle.ajaxUrl, {
-            action: 'wpstatic_deploy_single',
-            nonce: wpStaticDeploySingle.nonce,
+        $.post(content2htmlDeploySingle.ajaxUrl, {
+            action: 'content2html_deploy_single',
+            nonce: content2htmlDeploySingle.nonce,
             post_id: postId
         }).done(function (response) {
             if (response.success) {

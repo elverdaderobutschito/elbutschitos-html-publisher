@@ -1,14 +1,14 @@
 jQuery(function ($) {
     'use strict';
 
-    var i18n = (typeof wpStaticDeploy !== 'undefined' && wpStaticDeploy.i18n) ? wpStaticDeploy.i18n : {};
+    var i18n = (typeof content2htmlDeploy !== 'undefined' && content2htmlDeploy.i18n) ? content2htmlDeploy.i18n : {};
 
     // --- Tabs: Content / Navigation / Forms / Deployment target / -----
     // --- Markdown export --------------------------------------------------
-    var $tabs = $('.wpstatic-tabs .nav-tab');
-    var $panels = $('.wpstatic-tab-panel');
-    var $transferSection = $('#wpstatic-transfer-section, #wpstatic-transfer-hr, #wpstatic-save-button-wrap');
-    var STORAGE_KEY = 'wpstaticActiveTab';
+    var $tabs = $('.content2html-tabs .nav-tab');
+    var $panels = $('.content2html-tab-panel');
+    var $transferSection = $('#content2html-transfer-section, #content2html-transfer-hr, #content2html-save-button-wrap');
+    var STORAGE_KEY = 'content2htmlActiveTab';
 
     function activateTab(tabId) {
         if (!$panels.filter('[data-tab-panel="' + tabId + '"]').length) {
@@ -18,8 +18,8 @@ jQuery(function ($) {
         $tabs.removeClass('nav-tab-active');
         $tabs.filter('[data-tab="' + tabId + '"]').addClass('nav-tab-active');
 
-        $panels.removeClass('wpstatic-tab-active');
-        $panels.filter('[data-tab-panel="' + tabId + '"]').addClass('wpstatic-tab-active');
+        $panels.removeClass('content2html-tab-active');
+        $panels.filter('[data-tab-panel="' + tabId + '"]').addClass('content2html-tab-active');
 
         // "Deployment" (Deploy all etc.) doesn't belong to the Markdown
         // export (which runs independently of SFTP/Netlify) - hide it
@@ -55,8 +55,8 @@ jQuery(function ($) {
     // warning, you could e.g. switch the target from Netlify to SFTP,
     // forget to save, and click "Deploy all" - which would then silently
     // run with the old Netlify settings.
-    var $settingsForm = $('#wpstatic-settings-form');
-    var $unsavedNotice = $('#wpstatic-unsaved-notice');
+    var $settingsForm = $('#content2html-settings-form');
+    var $unsavedNotice = $('#content2html-unsaved-notice');
     var formDirty = false;
 
     if ($settingsForm.length) {
@@ -93,42 +93,42 @@ jQuery(function ($) {
 
     // --- Target switching (Netlify / SFTP) -------------------------------
     function updateTargetSections() {
-        var target = $('.wpstatic-target-radio:checked').val();
-        $('#wpstatic-target-netlify').toggle(target === 'netlify');
-        $('#wpstatic-target-sftp').toggle(target === 'sftp');
+        var target = $('.content2html-target-radio:checked').val();
+        $('#content2html-target-netlify').toggle(target === 'netlify');
+        $('#content2html-target-sftp').toggle(target === 'sftp');
     }
 
     function updateSftpAuthSections() {
-        var method = $('.wpstatic-sftp-auth-radio:checked').val();
-        $('.wpstatic-sftp-auth-password').toggle(method === 'password');
-        $('.wpstatic-sftp-auth-key').toggle(method === 'key');
+        var method = $('.content2html-sftp-auth-radio:checked').val();
+        $('.content2html-sftp-auth-password').toggle(method === 'password');
+        $('.content2html-sftp-auth-key').toggle(method === 'key');
     }
 
-    $('.wpstatic-target-radio').on('change', updateTargetSections);
-    $('.wpstatic-sftp-auth-radio').on('change', updateSftpAuthSections);
+    $('.content2html-target-radio').on('change', updateTargetSections);
+    $('.content2html-sftp-auth-radio').on('change', updateSftpAuthSections);
     updateTargetSections();
     updateSftpAuthSections();
 
     // --- Navigation: only show detail fields when enabled ---------------
     function updateNavSections() {
-        $('.wpstatic-nav-fields').each(function () {
+        $('.content2html-nav-fields').each(function () {
             var $table = $(this);
-            var enabled = $table.find('.wpstatic-nav-enabled').is(':checked');
-            $table.find('.wpstatic-nav-detail').toggle(enabled);
+            var enabled = $table.find('.content2html-nav-enabled').is(':checked');
+            $table.find('.content2html-nav-detail').toggle(enabled);
         });
     }
 
-    $('.wpstatic-nav-enabled').on('change', updateNavSections);
+    $('.content2html-nav-enabled').on('change', updateNavSections);
     updateNavSections();
 
     // --- Connection tests (SFTP / Netlify) --------------------------------
     function showTestResult($span, success, message) {
-        $span.removeClass('wpstatic-test-ok wpstatic-test-fail');
+        $span.removeClass('content2html-test-ok content2html-test-fail');
 
         if (success) {
-            $span.addClass('wpstatic-test-ok').html('&#10003; ' + message);
+            $span.addClass('content2html-test-ok').html('&#10003; ' + message);
         } else {
-            $span.addClass('wpstatic-test-fail').html('&#10007; ' + message);
+            $span.addClass('content2html-test-fail').html('&#10007; ' + message);
         }
     }
 
@@ -136,18 +136,18 @@ jQuery(function ($) {
         return ajaxPost(action, data);
     }
 
-    $('#wpstatic-test-sftp-btn').on('click', function () {
+    $('#content2html-test-sftp-btn').on('click', function () {
         var $btn = $(this);
-        var $result = $('#wpstatic-test-sftp-result');
+        var $result = $('#content2html-test-sftp-result');
 
         $btn.prop('disabled', true).text(i18n.testing);
-        $result.removeClass('wpstatic-test-ok wpstatic-test-fail').text('');
+        $result.removeClass('content2html-test-ok content2html-test-fail').text('');
 
-        ajaxPostSimple('wpstatic_deploy_test_sftp', {
+        ajaxPostSimple('content2html_deploy_test_sftp', {
             sftp_host: $('#sftp_host').val(),
             sftp_port: $('#sftp_port').val(),
             sftp_username: $('#sftp_username').val(),
-            sftp_auth_method: $('.wpstatic-sftp-auth-radio:checked').val(),
+            sftp_auth_method: $('.content2html-sftp-auth-radio:checked').val(),
             sftp_password: $('#sftp_password').val(),
             sftp_private_key: $('#sftp_private_key').val(),
             sftp_passphrase: $('#sftp_passphrase').val(),
@@ -165,14 +165,14 @@ jQuery(function ($) {
         });
     });
 
-    $('#wpstatic-test-netlify-btn').on('click', function () {
+    $('#content2html-test-netlify-btn').on('click', function () {
         var $btn = $(this);
-        var $result = $('#wpstatic-test-netlify-result');
+        var $result = $('#content2html-test-netlify-result');
 
         $btn.prop('disabled', true).text(i18n.testing);
-        $result.removeClass('wpstatic-test-ok wpstatic-test-fail').text('');
+        $result.removeClass('content2html-test-ok content2html-test-fail').text('');
 
-        ajaxPostSimple('wpstatic_deploy_test_netlify', {
+        ajaxPostSimple('content2html_deploy_test_netlify', {
             netlify_site_id: $('#netlify_site_id').val(),
             netlify_token: $('#netlify_token').val()
         }).done(function (response) {
@@ -189,23 +189,23 @@ jQuery(function ($) {
     });
 
     // --- "Deploy all" with batch progress ---------------------------------
-    var $btn = $('#wpstatic-deploy-all-btn');
-    var $progressWrap = $('#wpstatic-deploy-progress');
-    var $progressBar = $('#wpstatic-deploy-progress-bar');
-    var $progressText = $('#wpstatic-deploy-progress-text');
-    var $result = $('#wpstatic-deploy-result');
+    var $btn = $('#content2html-deploy-all-btn');
+    var $progressWrap = $('#content2html-deploy-progress');
+    var $progressBar = $('#content2html-deploy-progress-bar');
+    var $progressText = $('#content2html-deploy-progress-text');
+    var $result = $('#content2html-deploy-result');
 
     function ajaxPost(action, data) {
-        return $.post(wpStaticDeploy.ajaxUrl, $.extend({
+        return $.post(content2htmlDeploy.ajaxUrl, $.extend({
             action: action,
-            nonce: wpStaticDeploy.nonce
+            nonce: content2htmlDeploy.nonce
         }, data || {}));
     }
 
     function runBatch(total, offset) {
-        ajaxPost('wpstatic_deploy_batch', {
+        ajaxPost('content2html_deploy_batch', {
             offset: offset,
-            batch_size: wpStaticDeploy.batchSize
+            batch_size: content2htmlDeploy.batchSize
         }).done(function (response) {
             if (!response.success) {
                 fail(response.data && response.data.message);
@@ -235,9 +235,9 @@ jQuery(function ($) {
     function finalize() {
         $progressText.text(i18n.deployingToTarget);
 
-        var skipAssets = !$('#wpstatic-skip-assets').is(':checked');
+        var skipAssets = !$('#content2html-skip-assets').is(':checked');
 
-        ajaxPost('wpstatic_deploy_finalize', { skip_assets: skipAssets ? '1' : '0' }).done(function (response) {
+        ajaxPost('content2html_deploy_finalize', { skip_assets: skipAssets ? '1' : '0' }).done(function (response) {
             if (!response.success) {
                 fail(response.data && response.data.message);
                 return;
@@ -284,7 +284,7 @@ jQuery(function ($) {
         $progressBar.val(0);
         $progressText.text(i18n.starting);
 
-        ajaxPost('wpstatic_deploy_start').done(function (response) {
+        ajaxPost('content2html_deploy_start').done(function (response) {
             if (!response.success) {
                 fail(response.data && response.data.message);
                 return;
@@ -296,7 +296,7 @@ jQuery(function ($) {
             // uploaded for this target, "skip assets" must not be
             // selectable - otherwise a page could go live with no
             // CSS/images at all.
-            var $skipCheckbox = $('#wpstatic-skip-assets');
+            var $skipCheckbox = $('#content2html-skip-assets');
             if (!response.data.assets_ever_uploaded) {
                 $skipCheckbox.prop('checked', true).prop('disabled', true);
             } else {
@@ -315,7 +315,7 @@ jQuery(function ($) {
     });
 
     // --- Deploy assets only ------------------------------------------------
-    $('#wpstatic-deploy-assets-only-btn').on('click', function () {
+    $('#content2html-deploy-assets-only-btn').on('click', function () {
         if (!confirmIfUnsaved(i18n.deployAssetsOnly)) {
             return;
         }
@@ -325,7 +325,7 @@ jQuery(function ($) {
         $assetsBtn.prop('disabled', true).text(i18n.deployingAssets);
         $result.empty();
 
-        ajaxPost('wpstatic_deploy_assets_only').done(function (response) {
+        ajaxPost('content2html_deploy_assets_only').done(function (response) {
             if (!response.success) {
                 $result.append('<p style="color:#b32d2e;">' + i18n.errorPrefix + ' ' + ((response.data && response.data.message) || i18n.unknownError) + '</p>');
                 return;

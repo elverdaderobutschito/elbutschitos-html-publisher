@@ -11,9 +11,15 @@ if (!defined('ABSPATH')) {
  * exactly what the template references (assets/bootstrap/css/...).
  */
 class Content2HTML_AssetsManager {
-    private const DANGEROUS_EXTENSIONS = [
-        'php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phps', 'pht',
-        'phar', 'cgi', 'pl', 'asp', 'aspx', 'jsp',
+    private const ALLOWED_ASSET_EXTENSIONS = [
+        // Stylesheets (+ source maps)
+        'css', 'map',
+        // Scripts
+        'js',
+        // Fonts
+        'woff', 'woff2', 'ttf', 'otf', 'eot',
+        // Images
+        'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico', 'avif',
     ];
 
     public static function getStorageDir(): string {
@@ -56,7 +62,7 @@ class Content2HTML_AssetsManager {
             'exists' => true,
             'file_count' => $fileCount,
             'total_size' => $totalSize,
-            'updated_at' => (int) get_option('wpstatic_assets_updated_at', 0),
+            'updated_at' => (int) get_option('content2html_assets_updated_at', 0),
         ];
     }
 
@@ -143,13 +149,13 @@ class Content2HTML_AssetsManager {
             return ['ok' => false, 'message' => __('Could not move assets to the target location.', 'content2html'), 'warnings' => $removed];
         }
 
-        update_option('wpstatic_assets_updated_at', time(), false);
+        update_option('content2html_assets_updated_at', time(), false);
 
         // New assets were uploaded -> for all previous targets, the
         // "have already been uploaded" marker must be reset, otherwise
         // the NEW assets might accidentally never get uploaded to the
         // SFTP target (see Content2HTML_BatchController).
-        update_option('wpstatic_assets_uploaded_targets', [], false);
+        update_option('content2html_assets_uploaded_targets', [], false);
 
         return ['ok' => true, 'message' => __('Assets updated successfully.', 'content2html'), 'warnings' => $removed];
     }
@@ -158,6 +164,8 @@ class Content2HTML_AssetsManager {
         if (!self::hasAssets()) {
             return;
         }
+
+        $target_is_sftp = Content2HTML_Settings::getSettings()['target'] !== 'netlify';
 
         $source = self::getAssetsSourceDir();
         $destination = rtrim($buildDir, '/') . '/assets';
@@ -184,15 +192,26 @@ class Content2HTML_AssetsManager {
                 continue;
             }
 
-            // Defense in depth: skip executable/server-script file types
+            // Defense in depth: skip any file type outside the allowlist
             // here too, even though removeDangerousFiles() should
-            // already have caught them at upload time - this is the
+            // already have caught it at upload time - this is the
             // function that actually populates the web-accessible build
             // directory, so it gets its own independent check.
             $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
 
-            if (in_array($ext, self::DANGEROUS_EXTENSIONS, true)) {
+            if (!in_array($ext, self::ALLOWED_ASSET_EXTENSIONS, true)) {
                 continue;
+            }
+
+            // Local build directories must never contain executable JS
+            // under an active name for an SFTP target - it's kept as a
+            // harmless, non-executable dummy file and only renamed to its
+            // real name at actual upload time (see
+            // Content2HTML_SftpUploader::uploadFile()). Netlify's
+            // ZIP-based deploy has no rename step and no server-side
+            // execution risk for JS anyway, so the real name is kept.
+            if ($ext === 'js' && $target_is_sftp) {
+                $target .= '.source.txt';
             }
 
             copy($file->getPathname(), $target);
@@ -200,7 +219,7 @@ class Content2HTML_AssetsManager {
     }
 
     /**
-     * Deletes executable/server-script file types from an extracted
+     * Deletes any file type outside the allowlist from an extracted
      * assets folder (in place) - see the security note in extractZip().
      *
      * @return string[] Relative paths of the files that were removed.
@@ -219,7 +238,7 @@ class Content2HTML_AssetsManager {
 
             $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
 
-            if (in_array($ext, self::DANGEROUS_EXTENSIONS, true)) {
+            if (!in_array($ext, self::ALLOWED_ASSET_EXTENSIONS, true)) {
                 $removed[] = ltrim(str_replace($dir, '', $file->getPathname()), '/');
                 Content2HTML_Filesystem::deleteFile($file->getPathname());
             }

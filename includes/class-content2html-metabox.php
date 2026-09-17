@@ -16,7 +16,7 @@ class Content2HTML_MetaBox {
 
         foreach ($settings['post_types'] as $postType) {
             add_meta_box(
-                'wpstatic_deploy_single',
+                'content2html_deploy_single',
                 __('Content2HTML', 'content2html'),
                 [$this, 'render'],
                 $postType,
@@ -38,15 +38,15 @@ class Content2HTML_MetaBox {
             return;
         }
 
-        wp_nonce_field('wpstatic_deploy_single_box', 'wpstatic_deploy_single_nonce');
-        wp_nonce_field('wpstatic_template_select', 'wpstatic_template_nonce');
+        wp_nonce_field('content2html_deploy_single_box', 'content2html_deploy_single_nonce');
+        wp_nonce_field('content2html_template_select', 'content2html_template_nonce');
 
         if (!empty($settings['extra_templates'])) {
-            $currentTemplateId = get_post_meta($post->ID, '_wpstatic_template_id', true);
+            $currentTemplateId = get_post_meta($post->ID, '_content2html_template_id', true);
             ?>
             <p>
-                <label for="wpstatic_template_id"><?php esc_html_e('Template for this page', 'content2html'); ?></label><br>
-                <select id="wpstatic_template_id" name="wpstatic_template_id" style="width: 100%;">
+                <label for="content2html_template_id"><?php esc_html_e('Template for this page', 'content2html'); ?></label><br>
+                <select id="content2html_template_id" name="content2html_template_id" style="width: 100%;">
                     <option value=""><?php esc_html_e('Default', 'content2html'); ?></option>
                     <?php foreach ($settings['extra_templates'] as $tpl): ?>
                         <option value="<?php echo esc_attr($tpl['id']); ?>" <?php selected($currentTemplateId, $tpl['id']); ?>>
@@ -60,7 +60,7 @@ class Content2HTML_MetaBox {
         }
         ?>
         <p>
-            <button type="button" class="button button-primary" id="wpstatic-deploy-single-btn"
+            <button type="button" class="button button-primary" id="content2html-deploy-single-btn"
                     data-post-id="<?php echo esc_attr((string) $post->ID); ?>">
                 <?php esc_html_e('Deploy', 'content2html'); ?>
             </button>
@@ -70,7 +70,7 @@ class Content2HTML_MetaBox {
                 <?php esc_html_e('Note: with Netlify as the target, this button triggers a full rebuild and redeploy of the entire site (Netlify cannot update a single page in isolation).', 'content2html'); ?>
             </p>
         <?php endif; ?>
-        <div id="wpstatic-deploy-single-status" style="margin-top: 8px; font-size: 12px;"></div>
+        <div id="content2html-deploy-single-status" style="margin-top: 8px; font-size: 12px;"></div>
         <?php
     }
 
@@ -80,7 +80,7 @@ class Content2HTML_MetaBox {
      * NOT through our AJAX deploy button.
      */
     public function saveTemplateSelection(int $postId): void {
-        if (!isset($_POST['wpstatic_template_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['wpstatic_template_nonce'])), 'wpstatic_template_select')) {
+        if (!isset($_POST['content2html_template_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['content2html_template_nonce'])), 'content2html_template_select')) {
             return;
         }
 
@@ -92,12 +92,12 @@ class Content2HTML_MetaBox {
             return;
         }
 
-        $templateId = sanitize_text_field(wp_unslash($_POST['wpstatic_template_id'] ?? ''));
+        $templateId = sanitize_text_field(wp_unslash($_POST['content2html_template_id'] ?? ''));
 
         if ($templateId === '') {
-            delete_post_meta($postId, '_wpstatic_template_id');
+            delete_post_meta($postId, '_content2html_template_id');
         } else {
-            update_post_meta($postId, '_wpstatic_template_id', $templateId);
+            update_post_meta($postId, '_content2html_template_id', $templateId);
         }
     }
 
@@ -107,16 +107,16 @@ class Content2HTML_MetaBox {
         }
 
         wp_enqueue_script(
-            'wpstatic-deploy-single',
-            WPSTATIC_DEPLOY_URL . 'assets/js/single.js',
+            'content2html-deploy-single',
+            CONTENT2HTML_DEPLOY_URL . 'assets/js/single.js',
             ['jquery'],
-            WPSTATIC_DEPLOY_VERSION,
+            CONTENT2HTML_DEPLOY_VERSION,
             true
         );
 
-        wp_localize_script('wpstatic-deploy-single', 'wpStaticDeploySingle', [
+        wp_localize_script('content2html-deploy-single', 'content2htmlDeploySingle', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wpstatic_deploy_ajax'),
+            'nonce' => wp_create_nonce('content2html_deploy_ajax'),
             'i18n' => [
                 'deploying' => __('Deploying …', 'content2html'),
                 'deploy' => __('Deploy', 'content2html'),

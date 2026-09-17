@@ -68,7 +68,7 @@ class Content2HTML_BatchController {
 
         $settings = Content2HTML_Settings::getSettings();
 
-        $templateId = (string) get_post_meta($postId, '_wpstatic_template_id', true);
+        $templateId = (string) get_post_meta($postId, '_content2html_template_id', true);
         $templateOverride = Content2HTML_Settings::resolveTemplatePath($templateId);
         $templatePath = $templateOverride ?? $settings['template_path'];
 
@@ -183,7 +183,7 @@ class Content2HTML_BatchController {
     public static function assetsEverUploadedForCurrentTarget(): bool {
         $settings = Content2HTML_Settings::getSettings();
         $hash = self::targetIdentityHash($settings);
-        $marker = (array) get_option('wpstatic_assets_uploaded_targets', []);
+        $marker = (array) get_option('content2html_assets_uploaded_targets', []);
 
         return !empty($marker[$hash]);
     }
@@ -191,10 +191,10 @@ class Content2HTML_BatchController {
     public static function markAssetsUploadedForCurrentTarget(): void {
         $settings = Content2HTML_Settings::getSettings();
         $hash = self::targetIdentityHash($settings);
-        $marker = (array) get_option('wpstatic_assets_uploaded_targets', []);
+        $marker = (array) get_option('content2html_assets_uploaded_targets', []);
         $marker[$hash] = true;
 
-        update_option('wpstatic_assets_uploaded_targets', $marker, false);
+        update_option('content2html_assets_uploaded_targets', $marker, false);
     }
 
     /**
