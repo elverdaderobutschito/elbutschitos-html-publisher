@@ -1,4 +1,4 @@
-=== Content2HTML ===
+=== Elbutschitos HTML Publisher ===
 Contributors: elbutschito
 Tags: static site, static export, netlify, sftp, headless cms
 Requires at least: 6.0
@@ -12,7 +12,7 @@ Use WordPress as a headless CMS. Upload your own HTML template, define injection
 
 == Description ==
 
-Content2HTML generates a fully static HTML export of your WordPress posts and pages, using WordPress purely as a headless content source, and pushes the result to a deployment target of your choice: Netlify or any standard SFTP host.
+Elbutschitos HTML Publisher generates a fully static HTML export of your WordPress posts and pages, using WordPress purely as a headless content source, and pushes the result to a deployment target of your choice: Netlify or any standard SFTP host.
 
 **Core features**
 
@@ -24,7 +24,7 @@ Content2HTML generates a fully static HTML export of your WordPress posts and pa
 * **Markdown export** - export all content as plain `.md` files with YAML front matter, optionally bundling and localizing referenced images, for use with static-site generators such as Hugo, Jekyll, or Eleventy, or for archiving in a note-taking tool.
 * **HTML cleanup rules** - remove WordPress-only CSS classes, strip or change arbitrary attributes via simple selector-based rules, and inject custom per-post data into the template.
 
-Content2HTML is aimed at agencies and developers who want the editorial convenience of WordPress combined with the speed, security, and low hosting cost of a static site.
+Elbutschitos HTML Publisher is aimed at agencies and developers who want the editorial convenience of WordPress combined with the speed, security, and low hosting cost of a static site.
 
 = Bundled libraries =
 
@@ -50,7 +50,7 @@ No data is sent anywhere without an explicit action from you, and no usage track
 
 1. Upload the plugin files to the `/wp-content/plugins/content2html` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the "Plugins" screen in WordPress.
-3. Go to "Content2HTML" in the admin menu to configure a template, choose a deployment target (SFTP or Netlify), and set up any optional features (forms, navigation, Markdown export).
+3. Go to "HTML Publisher" in the admin menu to configure a template, choose a deployment target (SFTP or Netlify), and set up any optional features (forms, navigation, Markdown export).
 4. Optional but recommended: define `CONTENT2HTML_ENCRYPTION_KEY` in `wp-config.php` before entering SFTP/Netlify credentials, so stored secrets are encrypted with a key that isn't stored in the database itself.
 
 == Frequently Asked Questions ==

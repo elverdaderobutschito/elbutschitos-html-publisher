@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Content2HTML
+ * Plugin Name: Elbutschitos HTML Publisher
  * Plugin URI: https://ub-internetberatung.de
  * Description: Use WordPress as a headless CMS without building a WordPress theme. Upload your HTML template, define your own injection points, and publish the result as a static website.
  * Version: 1.0.0
@@ -10,7 +10,7 @@
  * Author URI: https://profiles.wordpress.org/elbutschito/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: content2html
+ * Text Domain: elbutschitos-html-publisher
  * Domain Path: /languages
  *
  * INSTALLATION / DEPENDENCIES:
@@ -39,7 +39,7 @@ define('CONTENT2HTML_DEPLOY_URL', plugin_dir_url(__FILE__));
 // makes the bundled languages/content2html-de_DE.mo file work.
 add_action('init', function () {
     // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- deliberate, see the comment above this hook: needed for the GitHub distribution, where WordPress.org's automatic translation loading doesn't apply.
-    load_plugin_textdomain('content2html', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    load_plugin_textdomain('elbutschitos-html-publisher', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
 
 // -----------------------------------------------------------------------
@@ -52,7 +52,7 @@ add_action('init', function () {
 
 if (version_compare(PHP_VERSION, '7.4', '<')) {
     add_action('admin_notices', function () {
-        echo '<div class="notice notice-error"><p>' . esc_html__('Content2HTML requires PHP 7.4 or newer.', 'content2html') . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('Elbutschitos HTML Publisher requires PHP 7.4 or newer.', 'elbutschitos-html-publisher') . '</p></div>';
     });
     return;
 }
@@ -61,7 +61,7 @@ if (!file_exists(CONTENT2HTML_DEPLOY_DIR . 'lib/simple_html_dom.php')) {
     add_action('admin_notices', function () {
         echo '<div class="notice notice-error"><p>'
             /* translators: %s: file path */
-            . sprintf(esc_html__('Content2HTML: %s is missing. See lib/README-simple-html-dom.txt.', 'content2html'), '<code>lib/simple_html_dom.php</code>')
+            . sprintf(esc_html__('Elbutschitos HTML Publisher: %s is missing. See lib/README-simple-html-dom.txt.', 'elbutschitos-html-publisher'), '<code>lib/simple_html_dom.php</code>')
             . '</p></div>';
     });
     return;

@@ -17,7 +17,7 @@ class Content2HTML_MetaBox {
         foreach ($settings['post_types'] as $postType) {
             add_meta_box(
                 'content2html_deploy_single',
-                __('Content2HTML', 'content2html'),
+                __('HTML Publisher', 'elbutschitos-html-publisher'),
                 [$this, 'render'],
                 $postType,
                 'side',
@@ -31,9 +31,9 @@ class Content2HTML_MetaBox {
 
         if (empty($settings['template_path'])) {
             echo '<p>' . sprintf(
-                /* translators: %s: "Content2HTML" settings page link text */
-                esc_html__('Please set up a template file under %s first.', 'content2html'),
-                '<em>' . esc_html__('Content2HTML', 'content2html') . '</em>'
+                /* translators: %s: "HTML Publisher" settings page link text */
+                esc_html__('Please set up a template file under %s first.', 'elbutschitos-html-publisher'),
+                '<em>' . esc_html__('HTML Publisher', 'elbutschitos-html-publisher') . '</em>'
             ) . '</p>';
             return;
         }
@@ -45,16 +45,16 @@ class Content2HTML_MetaBox {
             $currentTemplateId = get_post_meta($post->ID, '_content2html_template_id', true);
             ?>
             <p>
-                <label for="content2html_template_id"><?php esc_html_e('Template for this page', 'content2html'); ?></label><br>
+                <label for="content2html_template_id"><?php esc_html_e('Template for this page', 'elbutschitos-html-publisher'); ?></label><br>
                 <select id="content2html_template_id" name="content2html_template_id" style="width: 100%;">
-                    <option value=""><?php esc_html_e('Default', 'content2html'); ?></option>
+                    <option value=""><?php esc_html_e('Default', 'elbutschitos-html-publisher'); ?></option>
                     <?php foreach ($settings['extra_templates'] as $tpl): ?>
                         <option value="<?php echo esc_attr($tpl['id']); ?>" <?php selected($currentTemplateId, $tpl['id']); ?>>
                             <?php echo esc_html($tpl['name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <span class="description"><?php esc_html_e('Applied the next time this page is saved.', 'content2html'); ?></span>
+                <span class="description"><?php esc_html_e('Applied the next time this page is saved.', 'elbutschitos-html-publisher'); ?></span>
             </p>
             <?php
         }
@@ -62,12 +62,12 @@ class Content2HTML_MetaBox {
         <p>
             <button type="button" class="button button-primary" id="content2html-deploy-single-btn"
                     data-post-id="<?php echo esc_attr((string) $post->ID); ?>">
-                <?php esc_html_e('Deploy', 'content2html'); ?>
+                <?php esc_html_e('Deploy', 'elbutschitos-html-publisher'); ?>
             </button>
         </p>
         <?php if ($settings['target'] === 'netlify'): ?>
             <p class="description">
-                <?php esc_html_e('Note: with Netlify as the target, this button triggers a full rebuild and redeploy of the entire site (Netlify cannot update a single page in isolation).', 'content2html'); ?>
+                <?php esc_html_e('Note: with Netlify as the target, this button triggers a full rebuild and redeploy of the entire site (Netlify cannot update a single page in isolation).', 'elbutschitos-html-publisher'); ?>
             </p>
         <?php endif; ?>
         <div id="content2html-deploy-single-status" style="margin-top: 8px; font-size: 12px;"></div>
@@ -118,12 +118,12 @@ class Content2HTML_MetaBox {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('content2html_deploy_ajax'),
             'i18n' => [
-                'deploying' => __('Deploying …', 'content2html'),
-                'deploy' => __('Deploy', 'content2html'),
-                'done' => __('Done.', 'content2html'),
-                'error' => __('Error:', 'content2html'),
-                'unknownError' => __('Unknown error', 'content2html'),
-                'requestError' => __('Error processing the request.', 'content2html'),
+                'deploying' => __('Deploying …', 'elbutschitos-html-publisher'),
+                'deploy' => __('Deploy', 'elbutschitos-html-publisher'),
+                'done' => __('Done.', 'elbutschitos-html-publisher'),
+                'error' => __('Error:', 'elbutschitos-html-publisher'),
+                'unknownError' => __('Unknown error', 'elbutschitos-html-publisher'),
+                'requestError' => __('Error processing the request.', 'elbutschitos-html-publisher'),
             ],
         ]);
     }

@@ -74,13 +74,13 @@ class Content2HTML_AssetsManager {
      */
     public static function extractZip(string $zipTmpPath): array {
         if (!extension_loaded('zip')) {
-            return ['ok' => false, 'message' => __('The PHP zip extension is not active.', 'content2html'), 'warnings' => []];
+            return ['ok' => false, 'message' => __('The PHP zip extension is not active.', 'elbutschitos-html-publisher'), 'warnings' => []];
         }
 
         $zip = new ZipArchive();
 
         if ($zip->open($zipTmpPath) !== true) {
-            return ['ok' => false, 'message' => __('The ZIP file could not be opened.', 'content2html'), 'warnings' => []];
+            return ['ok' => false, 'message' => __('The ZIP file could not be opened.', 'elbutschitos-html-publisher'), 'warnings' => []];
         }
 
         // Safety check: does the ZIP even contain an "assets/" root folder?
@@ -96,7 +96,7 @@ class Content2HTML_AssetsManager {
             $zip->close();
             return [
                 'ok' => false,
-                'message' => __('The ZIP file does not contain an "assets/" folder as its root. Please zip the assets folder itself (not just its contents).', 'content2html'),
+                'message' => __('The ZIP file does not contain an "assets/" folder as its root. Please zip the assets folder itself (not just its contents).', 'elbutschitos-html-publisher'),
                 'warnings' => [],
             ];
         }
@@ -105,7 +105,7 @@ class Content2HTML_AssetsManager {
 
         if (!wp_mkdir_p($stagingDir)) {
             $zip->close();
-            return ['ok' => false, 'message' => __('Could not create a temporary directory.', 'content2html'), 'warnings' => []];
+            return ['ok' => false, 'message' => __('Could not create a temporary directory.', 'elbutschitos-html-publisher'), 'warnings' => []];
         }
 
         $extracted = $zip->extractTo($stagingDir);
@@ -113,14 +113,14 @@ class Content2HTML_AssetsManager {
 
         if (!$extracted) {
             Content2HTML_Filesystem::deleteDir($stagingDir);
-            return ['ok' => false, 'message' => __('Extracting the ZIP file failed.', 'content2html'), 'warnings' => []];
+            return ['ok' => false, 'message' => __('Extracting the ZIP file failed.', 'elbutschitos-html-publisher'), 'warnings' => []];
         }
 
         $stagedAssetsDir = $stagingDir . '/assets';
 
         if (!is_dir($stagedAssetsDir)) {
             Content2HTML_Filesystem::deleteDir($stagingDir);
-            return ['ok' => false, 'message' => __('No "assets/" folder found after extraction.', 'content2html'), 'warnings' => []];
+            return ['ok' => false, 'message' => __('No "assets/" folder found after extraction.', 'elbutschitos-html-publisher'), 'warnings' => []];
         }
 
         // Security: remove executable/server-script file types before
@@ -146,7 +146,7 @@ class Content2HTML_AssetsManager {
         Content2HTML_Filesystem::deleteDir($stagingDir); // clean up any ZIP extras (__MACOSX etc.)
 
         if (!$moved) {
-            return ['ok' => false, 'message' => __('Could not move assets to the target location.', 'content2html'), 'warnings' => $removed];
+            return ['ok' => false, 'message' => __('Could not move assets to the target location.', 'elbutschitos-html-publisher'), 'warnings' => $removed];
         }
 
         update_option('content2html_assets_updated_at', time(), false);
@@ -157,7 +157,7 @@ class Content2HTML_AssetsManager {
         // SFTP target (see Content2HTML_BatchController).
         update_option('content2html_assets_uploaded_targets', [], false);
 
-        return ['ok' => true, 'message' => __('Assets updated successfully.', 'content2html'), 'warnings' => $removed];
+        return ['ok' => true, 'message' => __('Assets updated successfully.', 'elbutschitos-html-publisher'), 'warnings' => $removed];
     }
 
     public static function copyToBuild(string $buildDir): void {

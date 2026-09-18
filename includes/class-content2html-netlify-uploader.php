@@ -17,7 +17,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
 
     public function __construct(array $settings) {
         if (empty($settings['netlify_site_id']) || empty($settings['netlify_token'])) {
-            throw new RuntimeException(esc_html__('Netlify Site ID or token is missing from the settings.', 'content2html'));
+            throw new RuntimeException(esc_html__('Netlify Site ID or token is missing from the settings.', 'elbutschitos-html-publisher'));
         }
 
         $this->siteId = $settings['netlify_site_id'];
@@ -35,28 +35,28 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         ]);
 
         if (is_wp_error($response)) {
-            throw new RuntimeException(esc_html(sprintf(/* translators: %s: HTTP error message */ __('Could not reach Netlify: %s', 'content2html'), $response->get_error_message())));
+            throw new RuntimeException(esc_html(sprintf(/* translators: %s: HTTP error message */ __('Could not reach Netlify: %s', 'elbutschitos-html-publisher'), $response->get_error_message())));
         }
 
         $httpCode = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
 
         if ($httpCode === 401) {
-            throw new RuntimeException(esc_html__('Netlify token invalid or expired. Please enter a new Personal Access Token.', 'content2html'));
+            throw new RuntimeException(esc_html__('Netlify token invalid or expired. Please enter a new Personal Access Token.', 'elbutschitos-html-publisher'));
         }
 
         if ($httpCode === 404) {
-            throw new RuntimeException(esc_html(sprintf(/* translators: %s: Netlify site ID */ __('No Netlify site found with the ID "%s". Please check the site ID (found under Site settings -> General -> Site details in Netlify).', 'content2html'), $this->siteId)));
+            throw new RuntimeException(esc_html(sprintf(/* translators: %s: Netlify site ID */ __('No Netlify site found with the ID "%s". Please check the site ID (found under Site settings -> General -> Site details in Netlify).', 'elbutschitos-html-publisher'), $this->siteId)));
         }
 
         if ($httpCode < 200 || $httpCode >= 300) {
-            throw new RuntimeException(esc_html(sprintf(/* translators: %d: HTTP status code */ __('Netlify responded with HTTP %d.', 'content2html'), $httpCode)));
+            throw new RuntimeException(esc_html(sprintf(/* translators: %d: HTTP status code */ __('Netlify responded with HTTP %d.', 'elbutschitos-html-publisher'), $httpCode)));
         }
 
         $decoded = json_decode($body, true);
 
         if (!is_array($decoded) || ($decoded['id'] ?? null) !== $this->siteId) {
-            throw new RuntimeException(esc_html__('Unexpected response from Netlify - please check the site ID.', 'content2html'));
+            throw new RuntimeException(esc_html__('Unexpected response from Netlify - please check the site ID.', 'elbutschitos-html-publisher'));
         }
     }
 
@@ -66,7 +66,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         // always call uploadDirectory() on the entire build directory for
         // Netlify.
         throw new RuntimeException(
-            esc_html__('Netlify does not support single-file transfer - please use uploadDirectory().', 'content2html')
+            esc_html__('Netlify does not support single-file transfer - please use uploadDirectory().', 'elbutschitos-html-publisher')
         );
     }
 
@@ -74,7 +74,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         $zipPath = rtrim($localDir, '/') . '.zip';
 
         if (!$this->zipDirectory($localDir, $zipPath)) {
-            throw new RuntimeException(esc_html__('Could not zip the build directory for the Netlify deploy.', 'content2html'));
+            throw new RuntimeException(esc_html__('Could not zip the build directory for the Netlify deploy.', 'elbutschitos-html-publisher'));
         }
 
         try {
@@ -90,7 +90,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         $zipData = Content2HTML_Filesystem::getContents($zipPath);
 
         if ($zipData === false) {
-            throw new RuntimeException(esc_html__('Could not read the ZIP file for the Netlify deploy.', 'content2html'));
+            throw new RuntimeException(esc_html__('Could not read the ZIP file for the Netlify deploy.', 'elbutschitos-html-publisher'));
         }
 
         $response = wp_remote_request("https://api.netlify.com/api/v1/sites/{$this->siteId}/deploys", [
@@ -104,7 +104,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         ]);
 
         if (is_wp_error($response)) {
-            throw new RuntimeException(esc_html(sprintf(/* translators: %s: HTTP error message */ __('Netlify deploy failed: %s', 'content2html'), $response->get_error_message())));
+            throw new RuntimeException(esc_html(sprintf(/* translators: %s: HTTP error message */ __('Netlify deploy failed: %s', 'elbutschitos-html-publisher'), $response->get_error_message())));
         }
 
         $httpCode = wp_remote_retrieve_response_code($response);
@@ -112,7 +112,7 @@ class Content2HTML_NetlifyUploader implements Content2HTML_Uploader {
         $decoded = json_decode($body, true);
 
         if ($httpCode < 200 || $httpCode >= 300 || !is_array($decoded)) {
-            throw new RuntimeException(esc_html(sprintf(/* translators: 1: HTTP status code, 2: response body excerpt */ __('Netlify responded with HTTP %1$d: %2$s', 'content2html'), $httpCode, substr($body, 0, 500))));
+            throw new RuntimeException(esc_html(sprintf(/* translators: 1: HTTP status code, 2: response body excerpt */ __('Netlify responded with HTTP %1$d: %2$s', 'elbutschitos-html-publisher'), $httpCode, substr($body, 0, 500))));
         }
 
         return [

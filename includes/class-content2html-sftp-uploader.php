@@ -19,12 +19,12 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
     public function __construct(array $settings) {
         if (!class_exists(\phpseclib3\Net\SFTP::class)) {
             throw new RuntimeException(
-                esc_html__('phpseclib3 was not found. Please run "composer install" in the plugin directory (see README.md) or upload the vendor folder manually.', 'content2html')
+                esc_html__('phpseclib3 was not found. Please run "composer install" in the plugin directory (see README.md) or upload the vendor folder manually.', 'elbutschitos-html-publisher')
             );
         }
 
         if (trim($settings['sftp_host']) === '') {
-            throw new RuntimeException(esc_html__('No host specified.', 'content2html'));
+            throw new RuntimeException(esc_html__('No host specified.', 'elbutschitos-html-publisher'));
         }
 
         $this->remoteBasePath = '/' . trim($settings['sftp_remote_base_path'], '/');
@@ -42,7 +42,7 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
                 throw new RuntimeException(
                     esc_html(sprintf(
                         /* translators: 1: host, 2: port */
-                        __('Could not connect to %1$s:%2$s. Please check host, port and firewall/network.', 'content2html'),
+                        __('Could not connect to %1$s:%2$s. Please check host, port and firewall/network.', 'elbutschitos-html-publisher'),
                         $settings['sftp_host'],
                         $settings['sftp_port']
                     ))
@@ -51,8 +51,8 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
 
             throw new RuntimeException(
                 esc_html(
-                    __('Connected to the server, but login failed. Please check the username and', 'content2html') . ' '
-                    . ($settings['sftp_auth_method'] === 'key' ? __('private key/passphrase', 'content2html') : __('password', 'content2html')) . '.'
+                    __('Connected to the server, but login failed. Please check the username and', 'elbutschitos-html-publisher') . ' '
+                    . ($settings['sftp_auth_method'] === 'key' ? __('private key/passphrase', 'elbutschitos-html-publisher') : __('password', 'elbutschitos-html-publisher')) . '.'
                 )
             );
         }
@@ -81,7 +81,7 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
             throw new RuntimeException(
                 esc_html(sprintf(
                     /* translators: %s: target directory path */
-                    __('Target directory "%s" could not be created/found. Please check the path and permissions of the SFTP user.', 'content2html'),
+                    __('Target directory "%s" could not be created/found. Please check the path and permissions of the SFTP user.', 'elbutschitos-html-publisher'),
                     $this->remoteBasePath
                 ))
             );
@@ -91,7 +91,7 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
             throw new RuntimeException(
                 esc_html(sprintf(
                     /* translators: %s: target directory path */
-                    __('"%s" exists, but is not a directory. Please check the path.', 'content2html'),
+                    __('"%s" exists, but is not a directory. Please check the path.', 'elbutschitos-html-publisher'),
                     $this->remoteBasePath
                 ))
             );
@@ -103,7 +103,7 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
             throw new RuntimeException(
                 esc_html(sprintf(
                     /* translators: 1: target directory path, 2: SFTP error */
-                    __('Connection/login successful, but "%1$s" is not writable (%2$s). Please check the directory permissions for the SFTP user.', 'content2html'),
+                    __('Connection/login successful, but "%1$s" is not writable (%2$s). Please check the directory permissions for the SFTP user.', 'elbutschitos-html-publisher'),
                     $this->remoteBasePath,
                     $this->sftp->getLastSFTPError()
                 ))
@@ -142,7 +142,7 @@ class Content2HTML_SftpUploader implements Content2HTML_Uploader {
             throw new RuntimeException(
                 esc_html(sprintf(
                     /* translators: 1: relative file path, 2: SFTP error */
-                    __('Could not transfer file via SFTP: %1$s (%2$s)', 'content2html'),
+                    __('Could not transfer file via SFTP: %1$s (%2$s)', 'elbutschitos-html-publisher'),
                     $relativePath,
                     $this->sftp->getLastSFTPError()
                 ))

@@ -23,7 +23,7 @@ class Content2HTML_AjaxController {
         check_ajax_referer(self::NONCE_ACTION, 'nonce');
 
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Insufficient permissions.', 'content2html')], 403);
+            wp_send_json_error(['message' => __('Insufficient permissions.', 'elbutschitos-html-publisher')], 403);
         }
     }
 
@@ -74,7 +74,7 @@ class Content2HTML_AjaxController {
         $queue = get_transient($this->queueTransientKey());
 
         if (!is_array($queue)) {
-            wp_send_json_error(['message' => __('No deployment in progress found. Please start again.', 'content2html')]);
+            wp_send_json_error(['message' => __('No deployment in progress found. Please start again.', 'elbutschitos-html-publisher')]);
         }
 
         $slice = array_slice($queue, $offset, $batchSize);
@@ -127,7 +127,7 @@ class Content2HTML_AjaxController {
         delete_transient($this->queueTransientKey());
         delete_transient($this->frontFileTransientKey());
 
-        $response = $upload['result'] ?: ['message' => __('Deployment complete.', 'content2html')];
+        $response = $upload['result'] ?: ['message' => __('Deployment complete.', 'elbutschitos-html-publisher')];
         $response['assets_included'] = $upload['assetsIncluded'];
 
         if (isset($upload['uploadStats'])) {
@@ -136,7 +136,7 @@ class Content2HTML_AjaxController {
 
             $response['message'] = sprintf(
                 /* translators: 1: file count, 2: target path, 3: wp-content file count */
-                __('Deployment complete: %1$d files to "%2$s". Of these, %3$d under wp-content/ (e.g. images).', 'content2html'),
+                __('Deployment complete: %1$d files to "%2$s". Of these, %3$d under wp-content/ (e.g. images).', 'elbutschitos-html-publisher'),
                 $stats['total'],
                 $upload['remoteBasePath'] ?? '',
                 $wpContentCount
@@ -146,7 +146,7 @@ class Content2HTML_AjaxController {
         }
 
         if ($upload['assetsSkipForced']) {
-            $response['message'] = ($response['message'] ?? '') . ' (' . __('Note: assets were uploaded anyway, since they had never been uploaded for this target before.', 'content2html') . ')';
+            $response['message'] = ($response['message'] ?? '') . ' (' . __('Note: assets were uploaded anyway, since they had never been uploaded for this target before.', 'elbutschitos-html-publisher') . ')';
         }
 
         wp_send_json_success($response);
@@ -164,11 +164,11 @@ class Content2HTML_AjaxController {
         $post = $postId ? get_post($postId) : null;
 
         if (!$post) {
-            wp_send_json_error(['message' => __('Post not found.', 'content2html')]);
+            wp_send_json_error(['message' => __('Post not found.', 'elbutschitos-html-publisher')]);
         }
 
         if (!current_user_can('edit_post', $postId)) {
-            wp_send_json_error(['message' => __('Insufficient permissions for this post.', 'content2html')], 403);
+            wp_send_json_error(['message' => __('Insufficient permissions for this post.', 'elbutschitos-html-publisher')], 403);
         }
 
         $settings = Content2HTML_Settings::getSettings();
@@ -211,7 +211,7 @@ class Content2HTML_AjaxController {
                 Content2HTML_BatchController::markAssetsUploadedForCurrentTarget();
 
                 wp_send_json_success(array_merge(
-                    ['message' => __('Netlify does not support single-page deploys - the entire site was rebuilt and redeployed.', 'content2html')],
+                    ['message' => __('Netlify does not support single-page deploys - the entire site was rebuilt and redeployed.', 'elbutschitos-html-publisher')],
                     $result
                 ));
             }
@@ -233,7 +233,7 @@ class Content2HTML_AjaxController {
             }
 
             if (empty($newFiles)) {
-                wp_send_json_error(['message' => __('No new files were generated - please check the configuration.', 'content2html')]);
+                wp_send_json_error(['message' => __('No new files were generated - please check the configuration.', 'elbutschitos-html-publisher')]);
             }
 
             $uploader = Content2HTML_BatchController::buildUploader();
@@ -244,7 +244,7 @@ class Content2HTML_AjaxController {
             }
 
             wp_send_json_success([
-                'message' => __('Page deployed.', 'content2html'),
+                'message' => __('Page deployed.', 'elbutschitos-html-publisher'),
                 'files' => $newFiles,
             ]);
         } catch (Throwable $e) {
@@ -260,7 +260,7 @@ class Content2HTML_AjaxController {
         $this->checkAccess();
 
         if (!Content2HTML_AssetsManager::hasAssets()) {
-            wp_send_json_error(['message' => __('No assets set up - please upload an assets.zip first.', 'content2html')]);
+            wp_send_json_error(['message' => __('No assets set up - please upload an assets.zip first.', 'elbutschitos-html-publisher')]);
         }
 
         try {
@@ -269,7 +269,7 @@ class Content2HTML_AjaxController {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
 
-        wp_send_json_success($result ?: ['message' => __('Assets deployed.', 'content2html')]);
+        wp_send_json_success($result ?: ['message' => __('Assets deployed.', 'elbutschitos-html-publisher')]);
     }
 
     // -----------------------------------------------------------------
@@ -325,7 +325,7 @@ class Content2HTML_AjaxController {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
 
-        wp_send_json_success(['message' => __('Connection successful, target directory is writable.', 'content2html')]);
+        wp_send_json_success(['message' => __('Connection successful, target directory is writable.', 'elbutschitos-html-publisher')]);
     }
 
     public function handleTestNetlify(): void {
@@ -352,6 +352,6 @@ class Content2HTML_AjaxController {
             wp_send_json_error(['message' => $e->getMessage()]);
         }
 
-        wp_send_json_success(['message' => __('Connection successful, site found.', 'content2html')]);
+        wp_send_json_success(['message' => __('Connection successful, site found.', 'elbutschitos-html-publisher')]);
     }
 }

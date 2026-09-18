@@ -66,8 +66,8 @@ class Content2HTML_Forms {
         // the site's actual audience.
         $validationScriptPath = '/' . self::VALIDATION_SCRIPT_FILENAME;
         $validationMessages = [
-            'validation_msg_required' => __('This field is required.', 'content2html'),
-            'validation_msg_select_one' => __('Please select at least one option.', 'content2html'),
+            'validation_msg_required' => __('This field is required.', 'elbutschitos-html-publisher'),
+            'validation_msg_select_one' => __('Please select at least one option.', 'elbutschitos-html-publisher'),
         ];
 
         if ($settings['target'] === 'netlify') {

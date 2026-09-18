@@ -804,7 +804,7 @@ class Content2HTML_Generator {
         if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
             throw new Content2HTML_ApiException(esc_html(sprintf(
                 /* translators: 1: request URL, 2: JSON error message */
-                __('WP API did not return valid JSON (%1$s): %2$s', 'content2html'),
+                __('WP API did not return valid JSON (%1$s): %2$s', 'elbutschitos-html-publisher'),
                 $url,
                 json_last_error_msg()
             )));

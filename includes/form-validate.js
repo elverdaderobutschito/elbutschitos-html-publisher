@@ -1,5 +1,5 @@
 /**
- * Content2HTML - lightweight form validation.
+ * Elbutschitos HTML Publisher - lightweight form validation.
  *
  * Checks in the browser BEFORE a form is submitted:
  *  - fields with aria-required="true" must be filled in (for

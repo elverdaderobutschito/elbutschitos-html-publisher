@@ -73,7 +73,7 @@ class Content2HTML_BatchController {
         $templatePath = $templateOverride ?? $settings['template_path'];
 
         if (empty($templatePath) || !is_file($templatePath)) {
-            throw new RuntimeException(esc_html__('No valid template file configured.', 'content2html'));
+            throw new RuntimeException(esc_html__('No valid template file configured.', 'elbutschitos-html-publisher'));
         }
 
         $effectiveTemplatePath = $templatePath;
