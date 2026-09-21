@@ -539,6 +539,16 @@ class Content2HTML_Generator {
             $form->setAttribute('data-netlify', 'true');
         }
 
+        // Netlify Forms only ever intercepts POST requests - a form
+        // without an explicit method (or with method="get") silently
+        // falls back to the browser's own GET-navigation instead of
+        // ever reaching Netlify's form backend. Submission then LOOKS
+        // successful (the browser lands wherever the action URL points)
+        // while no data was ever captured.
+        if (strtolower((string) $form->getAttribute('method')) !== 'post') {
+            $form->setAttribute('method', 'POST');
+        }
+
         $name = $form->getAttribute('name');
 
         if (!$name) {

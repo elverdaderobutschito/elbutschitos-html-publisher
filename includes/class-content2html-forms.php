@@ -11,9 +11,10 @@ if (!defined('ABSPATH')) {
  * post into the void.
  *
  * Two strategies, depending on the deployment target:
- *  - Netlify: HTML forms automatically get data-netlify="true" plus a
- *    hidden form-name field (Netlify Forms then detects them
- *    automatically at deploy time, no server code needed).
+ *  - Netlify: HTML forms automatically get data-netlify="true", method="POST"
+ *    (Netlify Forms only intercepts POST requests; a missing or GET method
+ *    is corrected) plus a hidden form-name field (Netlify Forms then detects
+ *    them automatically at deploy time, no server code needed).
  *  - SFTP (classic PHP hosting): the form's action is rewritten to a
  *    bundled PHP handler that emails the submitted data.
  */
