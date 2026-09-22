@@ -75,7 +75,7 @@ class Content2HTML_Generator {
     private array $urlReplaceArray = [];
     private string $originalDomain;
     private bool $keepOriginalFileName = false;
-    private bool $removeWPClasses = true;
+    private array $classPrefixesToRemove = [];
     private array $tidyHtmlRules = [];
 
     /** @var string[] Absolute paths of all files written by injectDataIntoTemplate(). */
@@ -170,8 +170,14 @@ class Content2HTML_Generator {
         $this->tidyHtmlRules = $tidyHtmlRules;
     }
 
-    public function setRemoveWPClasses(bool $remove): void {
-        $this->removeWPClasses = $remove;
+    /**
+     * @param string[] $prefixes Class-name prefixes to strip from every
+     *                           element's class attribute (e.g.
+     *                           ['wp-', 'uagb-']). Empty array (the
+     *                           default) leaves all classes untouched.
+     */
+    public function setClassPrefixesToRemove(array $prefixes): void {
+        $this->classPrefixesToRemove = $prefixes;
     }
 
     /**
@@ -395,36 +401,49 @@ class Content2HTML_Generator {
     }
 
     /**
-     * Removes WordPress-specific CSS classes (wp-*) from EVERY element
-     * that has a class attribute - regardless of where the wp-* class
-     * sits within a multi-part class list, and while keeping all other,
-     * non-WordPress classes intact.
+     * Strips any class token starting with one of the configured
+     * prefixes (see setClassPrefixesToRemove()) from every element's
+     * class attribute - regardless of where in a multi-part class list
+     * it sits - while leaving all other classes on that element intact.
      *
-     * (The previous implementation used the CSS selector "[class|=wp]",
-     * which checks the ENTIRE class attribute as a single string rather
-     * than each class individually - "has-medium-font-size
-     * wp-block-paragraph" was never detected this way, because "wp-"
-     * doesn't sit at the start of the COMPLETE attribute value. In
-     * addition, on a match the entire class attribute used to be deleted,
-     * including any non-WordPress classes in it.)
+     * Works directly on the serialized HTML string rather than mutating
+     * DOM nodes - deliberately NOT implemented as DOM attribute
+     * manipulation (setAttribute()/removeAttribute() on matched nodes).
+     * On some hosting environments, changes made that way did not
+     * reliably survive the DOM's own re-serialization step
+     * (__toString()) for certain deeply nested documents - the node's
+     * own ->outertext reflected the change correctly when read directly,
+     * but the change was lost by the time the whole document got
+     * serialized. Operating on the final string sidesteps that class of
+     * issue entirely.
      */
-    private function removeWPClassTokens(object $html): void {
-        foreach ($html->find('[class]') as $tag) {
-            $classes = preg_split('/\s+/', trim($tag->getAttribute('class')), -1, PREG_SPLIT_NO_EMPTY);
-            $kept = array_filter($classes, static function (string $class): bool {
-                return $class !== 'wp' && strpos($class, 'wp-') !== 0;
-            });
+    private function removeWPClassTokens(string $html): string {
+        $prefixes = $this->classPrefixesToRemove;
 
-            if (count($kept) === count($classes)) {
-                continue; // no wp class present - nothing to do
-            }
+        return preg_replace_callback(
+            '/\s*\bclass\s*=\s*(["\'])(.*?)\1/i',
+            function (array $matches) use ($prefixes): string {
+                $quote = $matches[1];
+                $classes = preg_split('/\s+/', trim($matches[2]), -1, PREG_SPLIT_NO_EMPTY);
+                $kept = array_filter($classes, static function (string $class) use ($prefixes): bool {
+                    foreach ($prefixes as $prefix) {
+                        // Matches both "wp-block-x" (starts with the
+                        // prefix) and a bare "wp" (the prefix with its
+                        // trailing dash removed) - the same two cases the
+                        // original, WordPress-specific version of this
+                        // handled.
+                        if (strpos($class, $prefix) === 0 || $class === rtrim($prefix, '-')) {
+                            return false;
+                        }
+                    }
 
-            if (count($kept) > 0) {
-                $tag->setAttribute('class', implode(' ', $kept));
-            } else {
-                $tag->removeAttribute('class');
-            }
-        }
+                    return true;
+                });
+
+                return $kept === [] ? '' : ' class=' . $quote . implode(' ', $kept) . $quote;
+            },
+            $html
+        );
     }
 
     /**
@@ -640,11 +659,15 @@ class Content2HTML_Generator {
                 }
             }
 
-            if ($this->removeWPClasses) {
-                $this->removeWPClassTokens($html);
+            $output = $html->__toString();
+
+            // Operates on the serialized string rather than the DOM - see
+            // the docblock on removeWPClassTokens() for why.
+            if ($this->classPrefixesToRemove !== []) {
+                $output = $this->removeWPClassTokens($output);
             }
 
-            return $html->__toString();
+            return $output;
         } finally {
             $html->clear();
             unset($html);

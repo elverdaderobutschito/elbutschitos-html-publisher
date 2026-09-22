@@ -46,12 +46,8 @@ class Content2HTML_GeneratorFactory {
             $generator->setDateFormat($settings['date_format']);
         }
 
-        // Map the checkbox state directly, 1:1, onto the behavior:
-        // checked ("Remove WP CSS classes") = remove, unchecked = leave
-        // untouched. This used to be inverted (see CHANGELOG) - a
-        // leftover from the original generateStatic.php logic that was
-        // never questioned during the refactor.
-        $generator->setRemoveWPClasses($settings['remove_wp_tags'] === 'on');
+        $prefixes = array_filter(array_map('trim', explode(',', $settings['remove_class_prefixes'])));
+        $generator->setClassPrefixesToRemove(array_values($prefixes));
 
         $generator->setTidyHtmlRules(self::parseTidyHtmlRules($settings['tidy_html_rules']));
 

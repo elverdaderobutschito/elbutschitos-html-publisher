@@ -345,4 +345,213 @@ jQuery(function ($) {
             $assetsBtn.prop('disabled', false).text(i18n.deployAssetsOnly);
         });
     });
+
+    // --- Field browser (Content tab) --------------------------------------
+    var $fbModal = $('#content2html-field-browser-modal');
+    var $fbPostSelect = $('#content2html-field-browser-post-select');
+    var $fbSearch = $('#content2html-field-browser-search');
+    var $fbShowEmpty = $('#content2html-field-browser-show-empty');
+    var $fbResults = $('#content2html-field-browser-results');
+    var $fbCommon = $('#content2html-field-browser-common');
+    var $fbCommonResults = $('#content2html-field-browser-common-results');
+    var fbFields = []; // full, unfiltered list from the last successful fetch
+
+    // The most frequently used fields, with clean, hand-picked marker
+    // names (rather than the generic auto-derived ones) - shown as a
+    // quick-access shortcut above the full, searchable list.
+    var FB_COMMON_FIELDS = [
+        {path: 'title->rendered', marker: '###title###'},
+        {path: 'content->rendered', marker: '###content###'},
+        {path: 'excerpt->rendered', marker: '###excerpt###'},
+        {path: 'slug', marker: '###slug###'},
+        {path: 'link', marker: '###permalink###'},
+        {path: 'date', marker: '###date###'}
+    ];
+
+    function fbBuildRowHtml(field, forcedMarker) {
+        var badge = field.is_array
+            ? '<span class="content2html-field-array-badge">' + i18n.fieldBrowserArrayBadge + '</span>'
+            : (field.is_linked ? '<span class="content2html-field-linked-badge">' + i18n.fieldBrowserLinkedBadge + '</span>' : '');
+        // A plain (unresolved) array field would silently produce the
+        // literal text "Array" if used directly in an injection rule
+        // (PHP's array-to-string conversion) - not clickable-to-insert,
+        // to prevent building a rule that looks fine but is broken.
+        var notInsertable = field.is_array && !field.is_linked;
+        var rowClass = 'content2html-field-row' + (notInsertable ? ' content2html-field-row-disabled' : '');
+
+        return '<div class="' + rowClass + '"'
+            + ' data-path="' + $('<div>').text(field.path).html() + '"'
+            + ' data-not-insertable="' + (notInsertable ? '1' : '') + '"'
+            + (forcedMarker ? ' data-marker="' + $('<div>').text(forcedMarker).html() + '"' : '')
+            + '>'
+            + '<code>' + $('<div>').text(field.path).html() + '</code>'
+            + '<span class="content2html-field-preview">' + $('<div>').text(field.preview).html() + '</span>'
+            + badge
+            + '</div>';
+    }
+
+    function fbRenderFields(fields) {
+        if (fields.length === 0) {
+            $fbResults.html('<p class="description">' + i18n.fieldBrowserNoMatch + '</p>');
+            return;
+        }
+
+        var html = '';
+        fields.forEach(function (field) {
+            html += fbBuildRowHtml(field, null);
+        });
+
+        $fbResults.html(html);
+    }
+
+    function fbRenderCommonFields() {
+        var byPath = {};
+        fbFields.forEach(function (field) {
+            byPath[field.path] = field;
+        });
+
+        var html = '';
+        FB_COMMON_FIELDS.forEach(function (common) {
+            var field = byPath[common.path];
+
+            if (field) {
+                html += fbBuildRowHtml(field, common.marker);
+            }
+        });
+
+        if (html === '') {
+            $fbCommon.hide();
+        } else {
+            $fbCommonResults.html(html);
+            $fbCommon.show();
+        }
+    }
+
+    function fbApplyFilter() {
+        var term = $fbSearch.val().toLowerCase();
+        var showEmpty = $fbShowEmpty.is(':checked');
+
+        var visible = fbFields.filter(function (field) {
+            return showEmpty || !field.is_empty;
+        });
+
+        if (term !== '') {
+            visible = visible.filter(function (field) {
+                return field.path.toLowerCase().indexOf(term) !== -1
+                    || field.preview.toLowerCase().indexOf(term) !== -1;
+            });
+        }
+
+        fbRenderFields(visible);
+    }
+
+    function fbLoadPosts() {
+        $fbPostSelect.prop('disabled', true).html('<option value="">' + i18n.fieldBrowserLoadingPosts + '</option>');
+
+        ajaxPost('content2html_field_browser_posts', {}).done(function (response) {
+            if (!response.success) {
+                $fbPostSelect.html('<option value="">' + ((response.data && response.data.message) || i18n.unknownError) + '</option>');
+                return;
+            }
+
+            var posts = (response.data && response.data.posts) || [];
+
+            if (posts.length === 0) {
+                $fbPostSelect.html('<option value="">' + i18n.fieldBrowserNoPosts + '</option>');
+                return;
+            }
+
+            var options = '<option value="">' + i18n.fieldBrowserSelectPost + '</option>';
+            posts.forEach(function (post) {
+                options += '<option value="' + post.id + '">' + $('<div>').text(post.title).html() + ' (' + post.post_type + ')</option>';
+            });
+
+            $fbPostSelect.prop('disabled', false).html(options);
+        }).fail(function () {
+            $fbPostSelect.html('<option value="">' + i18n.errorRequestFailed + '</option>');
+        });
+    }
+
+    function fbLoadFields(postId) {
+        fbFields = [];
+        $fbCommon.hide();
+        $fbResults.html('<p class="description">' + i18n.fieldBrowserLoadingFields + '</p>');
+
+        ajaxPost('content2html_field_browser_fields', {post_id: postId}).done(function (response) {
+            if (!response.success) {
+                $fbResults.html('<p style="color:#b32d2e;">' + ((response.data && response.data.message) || i18n.unknownError) + '</p>');
+                return;
+            }
+
+            fbFields = (response.data && response.data.fields) || [];
+            fbRenderCommonFields();
+            fbApplyFilter();
+        }).fail(function () {
+            $fbResults.html('<p style="color:#b32d2e;">' + i18n.errorRequestFailed + '</p>');
+        });
+    }
+
+    $('#content2html-field-browser-open-btn').on('click', function () {
+        $fbModal.show();
+        $fbSearch.val('');
+        $fbShowEmpty.prop('checked', false);
+        fbFields = [];
+        $fbCommon.hide();
+        $fbResults.html('<p class="description">' + i18n.fieldBrowserSelectPrompt + '</p>');
+        fbLoadPosts();
+    });
+
+    $('#content2html-field-browser-close-btn').on('click', function () {
+        $fbModal.hide();
+    });
+
+    $fbModal.on('click', function (event) {
+        if (event.target === this) {
+            $fbModal.hide();
+        }
+    });
+
+    $fbPostSelect.on('change', function () {
+        var postId = $(this).val();
+        $fbSearch.val('');
+
+        if (postId) {
+            fbLoadFields(postId);
+        } else {
+            fbFields = [];
+            $fbCommon.hide();
+            $fbResults.html('<p class="description">' + i18n.fieldBrowserSelectPrompt + '</p>');
+        }
+    });
+
+    $fbSearch.on('input', fbApplyFilter);
+    $fbShowEmpty.on('change', fbApplyFilter);
+
+    $fbResults.add($fbCommonResults).on('click', '.content2html-field-row', function () {
+        var $row = $(this);
+
+        if ($row.data('not-insertable')) {
+            var originalWarningHtml = $row.html();
+            $row.append(' <em>' + i18n.fieldBrowserNotInsertable + '</em>');
+            setTimeout(function () {
+                $row.html(originalWarningHtml);
+            }, 4000);
+            return;
+        }
+
+        var path = $row.data('path');
+        var marker = $row.data('marker') || ('###' + String(path).replace(/->/g, '_').replace(/[^a-zA-Z0-9_]/g, '_') + '###');
+        var $textarea = $('#data_injection_rules');
+        var newLine = path + ' => ' + marker;
+        var current = $textarea.val();
+
+        $textarea.val(current === '' ? newLine : current.replace(/\n*$/, '') + '\n' + newLine);
+        $textarea.trigger('change'); // so the "unsaved changes" tracking picks this up
+
+        var originalHtml = $row.html();
+        $row.append(' <em>(' + i18n.fieldBrowserInserted + ')</em>');
+        setTimeout(function () {
+            $row.html(originalHtml);
+        }, 1200);
+    });
 });

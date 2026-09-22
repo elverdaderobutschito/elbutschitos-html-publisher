@@ -12,10 +12,14 @@ directory structure (permalink paths) defined in WordPress.
 
 ## Installation
 
-1. **`lib/simple_html_dom.php` is already included** - the same version
-   used in the `generateStatic.php` setup (classic single-file API:
-   `class simple_html_dom`, `str_get_html()`), for consistent behavior
-   between the demo and the plugin.
+1. **`lib/simple_html_dom.php` is already included** - a bundled copy of
+   [simplehtmldom](http://sourceforge.net/projects/simplehtmldom/) (MIT
+   license), with a handful of targeted patches applied (naming-prefix
+   fixes required by the WordPress.org review, an ABSPATH guard, and
+   WordPress-native output escaping in its debug methods). **See
+   `lib/PATCHES.md` before ever updating this file to a newer upstream
+   version** - every patch listed there needs to be re-applied, they're
+   not optional.
 
 2. **phpseclib is already included** (version 3.0.43, sourced directly
    from [github.com/phpseclib/phpseclib](https://github.com/phpseclib/phpseclib),
@@ -41,8 +45,8 @@ directory structure (permalink paths) defined in WordPress.
 5. Configure under **HTML Publisher** (its own menu item):
    - Post types (posts/pages)
    - Upload a template file
-   - Rules (data injection, change URL, tidy HTML) - same format as in
-     `generateStatic.php`
+   - Rules (data injection, change URL, tidy HTML) - see the tutorial for
+     the exact syntax
    - Target: SFTP or Netlify, including credentials
 
 ## Usage

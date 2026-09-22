@@ -17,6 +17,8 @@ class Content2HTML_AjaxController {
         add_action('wp_ajax_content2html_deploy_assets_only', [$this, 'handleAssetsOnly']);
         add_action('wp_ajax_content2html_deploy_test_sftp', [$this, 'handleTestSftp']);
         add_action('wp_ajax_content2html_deploy_test_netlify', [$this, 'handleTestNetlify']);
+        add_action('wp_ajax_content2html_field_browser_posts', [$this, 'handleFieldBrowserPosts']);
+        add_action('wp_ajax_content2html_field_browser_fields', [$this, 'handleFieldBrowserFields']);
     }
 
     private function checkAccess(): void {
@@ -353,5 +355,69 @@ class Content2HTML_AjaxController {
         }
 
         wp_send_json_success(['message' => __('Connection successful, site found.', 'elbutschitos-html-publisher')]);
+    }
+
+    // -----------------------------------------------------------------
+    // Field browser (Content tab, next to Data Injection Rules)
+    // -----------------------------------------------------------------
+
+    /**
+     * Returns a short list of published posts/pages (from the currently
+     * enabled post types) for the field browser's post picker. Capped at
+     * 200 - this is meant for picking a representative example, not for
+     * browsing the entire site.
+     */
+    public function handleFieldBrowserPosts(): void {
+        $this->checkAccess();
+
+        $settings = Content2HTML_Settings::getSettings();
+
+        $posts = get_posts([
+            'post_type' => $settings['post_types'],
+            'post_status' => 'publish',
+            'numberposts' => 200,
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ]);
+
+        $result = [];
+        foreach ($posts as $post) {
+            $result[] = [
+                'id' => $post->ID,
+                'title' => get_the_title($post) ?: __('(no title)', 'elbutschitos-html-publisher'),
+                'post_type' => $post->post_type,
+            ];
+        }
+
+        wp_send_json_success(['posts' => $result]);
+    }
+
+    /**
+     * Returns the flattened "path => value preview" list for one
+     * specific post/page - see Content2HTML_FieldBrowser.
+     */
+    public function handleFieldBrowserFields(): void {
+        $this->checkAccess();
+
+        $postId = absint(wp_unslash($_POST['post_id'] ?? 0));
+        $post = $postId > 0 ? get_post($postId) : null;
+
+        if ($post === null) {
+            wp_send_json_error(['message' => __('Post not found.', 'elbutschitos-html-publisher')]);
+        }
+
+        $settings = Content2HTML_Settings::getSettings();
+
+        if (!in_array($post->post_type, $settings['post_types'], true)) {
+            wp_send_json_error(['message' => __('This post type is not enabled under Content.', 'elbutschitos-html-publisher')]);
+        }
+
+        try {
+            $fields = Content2HTML_FieldBrowser::getFields($postId, $post->post_type);
+        } catch (Throwable $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
+        }
+
+        wp_send_json_success(['fields' => $fields]);
     }
 }

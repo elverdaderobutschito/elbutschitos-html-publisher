@@ -59,7 +59,7 @@ class Content2HTML_Settings {
 
             'nav_active_class' => 'active',
             'date_format' => '',
-            'remove_wp_tags' => '',
+            'remove_class_prefixes' => '',
             'data_injection_rules' => '',
             'change_url_rules' => '',
             'tidy_html_rules' => '',
@@ -157,7 +157,7 @@ class Content2HTML_Settings {
                 'deployAssetsOnly' => __('Deploy assets only', 'elbutschitos-html-publisher'),
                 'unsavedChangesConfirm' => __('You have unsaved changes in the settings.', 'elbutschitos-html-publisher') . "\n\n"
                     /* translators: %s: name of the action button being confirmed, e.g. "Deploy all" */
-                    . __('"%s" uses the last SAVED settings, not your current input.', 'elbutschitos-html-publisher') . "\n\n"
+ 		     . __('"%s" uses the last SAVED settings, not your current input.', 'elbutschitos-html-publisher') . "\n\n"
                     . __('Continue anyway?', 'elbutschitos-html-publisher'),
                 'unknownError' => __('Unknown error', 'elbutschitos-html-publisher'),
                 'unknownErrorPeriod' => __('Unknown error.', 'elbutschitos-html-publisher'),
@@ -173,6 +173,16 @@ class Content2HTML_Settings {
                 'deploymentComplete' => __('Deployment complete.', 'elbutschitos-html-publisher'),
                 'testing' => __('Testing …', 'elbutschitos-html-publisher'),
                 'requestToWordPressFailed' => __('Request to WordPress failed.', 'elbutschitos-html-publisher'),
+                'fieldBrowserLoadingPosts' => __('Loading...', 'elbutschitos-html-publisher'),
+                'fieldBrowserSelectPost' => __('Select a post/page...', 'elbutschitos-html-publisher'),
+                'fieldBrowserNoPosts' => __('No published posts/pages found for the enabled post types.', 'elbutschitos-html-publisher'),
+                'fieldBrowserSelectPrompt' => __('Select a post/page above to load its available fields.', 'elbutschitos-html-publisher'),
+                'fieldBrowserLoadingFields' => __('Loading fields...', 'elbutschitos-html-publisher'),
+                'fieldBrowserNoMatch' => __('No fields match your filter.', 'elbutschitos-html-publisher'),
+                'fieldBrowserArrayBadge' => __('array', 'elbutschitos-html-publisher'),
+                'fieldBrowserLinkedBadge' => __('resolved link', 'elbutschitos-html-publisher'),
+                'fieldBrowserInserted' => __('Inserted.', 'elbutschitos-html-publisher'),
+                'fieldBrowserNotInsertable' => __('This is a plain list of IDs - used directly, it would just print the word "Array". Use the sourcePath|endpoint|dataPoint syntax instead (see the tutorial).', 'elbutschitos-html-publisher'),
             ],
         ]);
     }
@@ -198,7 +208,7 @@ class Content2HTML_Settings {
             'target' => in_array($rawTarget, ['sftp', 'netlify'], true) ? $rawTarget : 'sftp',
             'post_types' => !empty($postTypes) ? $postTypes : ['post', 'page'],
             'date_format' => sanitize_text_field(wp_unslash($_POST['date_format'] ?? '')),
-            'remove_wp_tags' => !empty($_POST['remove_wp_tags']) ? 'on' : '',
+            'remove_class_prefixes' => sanitize_text_field(wp_unslash($_POST['remove_class_prefixes'] ?? '')),
             'data_injection_rules' => sanitize_textarea_field(wp_unslash($_POST['data_injection_rules'] ?? '')),
             'change_url_rules' => sanitize_textarea_field(wp_unslash($_POST['change_url_rules'] ?? '')),
             'tidy_html_rules' => sanitize_textarea_field(wp_unslash($_POST['tidy_html_rules'] ?? '')),
@@ -742,12 +752,20 @@ class Content2HTML_Settings {
                         <td><input type="text" id="date_format" name="date_format" value="<?php echo esc_attr($settings['date_format']); ?>" class="regular-text" placeholder="d.m.Y"></td>
                     </tr>
                     <tr>
-                        <th><label for="remove_wp_tags"><?php esc_html_e('Remove WP CSS classes', 'elbutschitos-html-publisher'); ?></label></th>
-                        <td><label><input type="checkbox" id="remove_wp_tags" name="remove_wp_tags" <?php checked('on', $settings['remove_wp_tags']); ?>> <?php esc_html_e('active', 'elbutschitos-html-publisher'); ?></label></td>
+			<th><label for="remove_class_prefixes"><?php esc_html_e('Remove CSS class prefixes', 'elbutschitos-html-publisher'); ?></label></th>
+                         <td>
+                            <input type="text" id="remove_class_prefixes" name="remove_class_prefixes" class="regular-text" placeholder="wp-, uagb-" value="<?php echo esc_attr($settings['remove_class_prefixes']); ?>">
+                            <p class="description"><?php esc_html_e('Comma-separated list of class-name prefixes to strip from every element (e.g. "wp-, uagb-" removes any class starting with either). Leave empty to keep all classes as-is.', 'elbutschitos-html-publisher'); ?></p>
+                        </td>
                     </tr>
                     <tr>
                         <th><label for="data_injection_rules"><?php esc_html_e('Data injection rules', 'elbutschitos-html-publisher'); ?></label></th>
-                        <td><textarea id="data_injection_rules" name="data_injection_rules" rows="6" class="large-text code" placeholder="title->rendered => ###title###"><?php echo esc_textarea($settings['data_injection_rules']); ?></textarea></td>
+                        <td>
+                            <textarea id="data_injection_rules" name="data_injection_rules" rows="6" class="large-text code" placeholder="title->rendered => ###title###"><?php echo esc_textarea($settings['data_injection_rules']); ?></textarea>
+                            <p>
+                                <button type="button" class="button" id="content2html-field-browser-open-btn"><?php esc_html_e('Browse available fields...', 'elbutschitos-html-publisher'); ?></button>
+                            </p>
+                        </td>
                     </tr>
                     <tr>
                         <th><label for="change_url_rules"><?php esc_html_e('Change-URL rules', 'elbutschitos-html-publisher'); ?></label></th>
@@ -758,6 +776,38 @@ class Content2HTML_Settings {
                         <td><textarea id="tidy_html_rules" name="tidy_html_rules" rows="4" class="large-text code"><?php echo esc_textarea($settings['tidy_html_rules']); ?></textarea></td>
                     </tr>
                 </table>
+                </div>
+
+		<div id="content2html-field-browser-modal" class="content2html-modal-overlay" style="display:none;">
+                    <div class="content2html-modal">
+                        <div class="content2html-modal-header">
+                            <h2><?php esc_html_e('Available fields', 'elbutschitos-html-publisher'); ?></h2>
+                            <button type="button" class="button-link" id="content2html-field-browser-close-btn" aria-label="<?php esc_attr_e('Close', 'elbutschitos-html-publisher'); ?>">&times;</button>
+                        </div>
+                        <div class="content2html-modal-body">
+                            <p>
+                                <label for="content2html-field-browser-post-select"><?php esc_html_e('Example post/page to inspect:', 'elbutschitos-html-publisher'); ?></label><br>
+                                <select id="content2html-field-browser-post-select" style="width:100%;">
+                                    <option value=""><?php esc_html_e('Loading...', 'elbutschitos-html-publisher'); ?></option>
+                                </select>
+                            </p>
+                            <div id="content2html-field-browser-common" class="content2html-field-browser-common" style="display:none;">
+                                <h4 style="margin-bottom:4px;"><?php esc_html_e('Common fields', 'elbutschitos-html-publisher'); ?></h4>
+                                <div id="content2html-field-browser-common-results"></div>
+                            </div>
+                            <p style="margin-top:16px;"><strong><?php esc_html_e('All fields', 'elbutschitos-html-publisher'); ?></strong></p>
+                            <p>
+                                <input type="text" id="content2html-field-browser-search" class="regular-text" style="width:100%;" placeholder="<?php esc_attr_e('Filter fields...', 'elbutschitos-html-publisher'); ?>">
+                            </p>
+                            <p>
+                                <label><input type="checkbox" id="content2html-field-browser-show-empty"> <?php esc_html_e('Also show empty fields', 'elbutschitos-html-publisher'); ?></label>
+                            </p>
+                            <p class="description"><?php esc_html_e('Click a row to insert it into the Data Injection Rules field as a new line. Fields marked "array" are lists of IDs (e.g. custom taxonomy terms) - for the built-in author/featured image/categories/tags, the resolved, readable version is already listed below (marked "resolved link"); for other cases, use the sourcePath|endpoint|dataPoint syntax instead (see the tutorial).', 'elbutschitos-html-publisher'); ?></p>
+                            <div id="content2html-field-browser-results" class="content2html-field-browser-results">
+                                <p class="description"><?php esc_html_e('Select a post/page above to load its available fields.', 'elbutschitos-html-publisher'); ?></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="content2html-tab-panel" data-tab-panel="formulare">

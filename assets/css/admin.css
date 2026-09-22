@@ -27,14 +27,14 @@
 
 #content2html-unsaved-notice {
     position: sticky;
-    top: 32px; /* Höhe der WP-Admin-Bar auf Desktop */
+    top: 32px; /* height of the WP admin bar on desktop */
     z-index: 100;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 @media screen and (max-width: 782px) {
     #content2html-unsaved-notice {
-        top: 46px; /* WP-Admin-Bar ist auf Mobile/Tablet höher */
+        top: 46px; /* the WP admin bar is taller on mobile/tablet */
     }
 }
 
@@ -49,4 +49,126 @@
 
 .content2html-tab-panel.content2html-tab-active {
     display: block;
+}
+
+.content2html-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content2html-modal {
+    background: #fff;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.content2html-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.content2html-modal-header h2 {
+    margin: 0;
+}
+
+.content2html-modal-header button {
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.content2html-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+}
+
+.content2html-field-browser-results {
+    margin-top: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dcdcde;
+}
+
+.content2html-field-row {
+    display: flex;
+    gap: 10px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f1;
+    cursor: pointer;
+}
+
+.content2html-field-row:hover {
+    background: #f0f6fc;
+}
+
+.content2html-field-row-disabled:hover {
+    background: #fff;
+    cursor: help;
+}
+
+.content2html-field-row:last-child {
+    border-bottom: none;
+}
+
+.content2html-field-row code {
+    flex: 0 0 auto;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.content2html-field-row .content2html-field-preview {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #646970;
+}
+
+.content2html-field-row .content2html-field-array-badge {
+    flex: 0 0 auto;
+    font-size: 11px;
+    background: #f0e6ff;
+    color: #5c2d91;
+    padding: 1px 6px;
+    border-radius: 3px;
+    align-self: center;
+}
+
+.content2html-field-row .content2html-field-linked-badge {
+    flex: 0 0 auto;
+    font-size: 11px;
+    background: #e5f5e0;
+    color: #1e6b1e;
+    padding: 1px 6px;
+    border-radius: 3px;
+    align-self: center;
+}
+
+.content2html-field-browser-common {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    padding: 8px 10px;
+    margin-top: 10px;
+}
+
+.content2html-field-browser-common h4 {
+    margin-top: 0;
 }

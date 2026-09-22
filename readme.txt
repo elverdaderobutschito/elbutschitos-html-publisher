@@ -4,7 +4,7 @@ Tags: static site, static export, netlify, sftp, headless cms
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,10 +79,16 @@ Yes. The navigation feature is opt-in per navigation (main/footer) and does noth
 
 == Changelog ==
 
+= 1.1.0 =
+* Added a field browser (Content tab, next to Data Injection Rules): lists all available REST API fields for a chosen example post/page, with a value preview, so you no longer have to inspect raw JSON to find the right path syntax. Automatically resolves author/featured image/category/tag IDs into readable values, and includes a quick-access shortlist for the most commonly used fields (title, content, excerpt, slug, permalink, date).
+
 = 1.0.0 =
 * Initial public release: template-based static generation, SFTP and Netlify deployment, automatic and custom URL rewriting, per-post templates, working contact forms (Netlify Forms / PHP mail handler), WordPress-menu-driven navigation, Markdown export, HTML cleanup rules.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds a field browser tool - no breaking changes, safe to update.
 
 = 1.0.0 =
 Initial release.

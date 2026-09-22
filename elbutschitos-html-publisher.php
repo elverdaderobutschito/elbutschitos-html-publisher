@@ -3,7 +3,7 @@
  * Plugin Name: Elbutschitos HTML Publisher
  * Plugin URI: https://ub-internetberatung.de
  * Description: Use WordPress as a headless CMS without building a WordPress theme. Upload your HTML template, define your own injection points, and publish the result as a static website.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: elbutschito
@@ -29,7 +29,6 @@ if (!defined('ABSPATH')) {
 define('CONTENT2HTML_DEPLOY_VERSION', '1.0.0');
 define('CONTENT2HTML_DEPLOY_DIR', plugin_dir_path(__FILE__));
 define('CONTENT2HTML_DEPLOY_URL', plugin_dir_url(__FILE__));
-
 // Hooked on init rather than plugins_loaded, per current WordPress.org
 // guidance (loading translations on plugins_loaded happens too early
 // for some newer WordPress i18n internals). Kept at all (rather than
@@ -86,8 +85,10 @@ require_once CONTENT2HTML_DEPLOY_DIR . 'includes/interface-content2html-uploader
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-sftp-uploader.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-netlify-uploader.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-batch-controller.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-field-browser.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-ajax.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-metabox.php';
+
 
 add_action('plugins_loaded', function () {
     new Content2HTML_Settings();

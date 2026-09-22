@@ -55,6 +55,7 @@ Three `define()`d constants, same reasoning as above. Renamed (both the
 | `DEFAULT_SPAN_TEXT`         | `CONTENT2HTML_DEFAULT_SPAN_TEXT`         |
 
 Note: the `HDOM_*` constants (`HDOM_TYPE_ELEMENT`, `HDOM_INFO_BEGIN`
+
 etc.) were not flagged by this earlier review pass and were initially
 left unprefixed - a later review round did flag them after all, see
 section 5 below for how they were subsequently renamed.
