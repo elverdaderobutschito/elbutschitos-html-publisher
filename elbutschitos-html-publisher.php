@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('CONTENT2HTML_DEPLOY_VERSION', '1.0.0');
+define('CONTENT2HTML_DEPLOY_VERSION', '1.1.0');
 define('CONTENT2HTML_DEPLOY_DIR', plugin_dir_path(__FILE__));
 define('CONTENT2HTML_DEPLOY_URL', plugin_dir_url(__FILE__));
 // Hooked on init rather than plugins_loaded, per current WordPress.org

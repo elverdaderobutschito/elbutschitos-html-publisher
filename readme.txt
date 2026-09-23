@@ -81,6 +81,7 @@ Yes. The navigation feature is opt-in per navigation (main/footer) and does noth
 
 = 1.1.0 =
 * Added a field browser (Content tab, next to Data Injection Rules): lists all available REST API fields for a chosen example post/page, with a value preview, so you no longer have to inspect raw JSON to find the right path syntax. Automatically resolves author/featured image/category/tag IDs into readable values, and includes a quick-access shortlist for the most commonly used fields (title, content, excerpt, slug, permalink, date).
+* Added class mapping (Content tab, next to Remove CSS class prefixes): lets you rename specific layout-relevant WordPress/page-builder classes (e.g. wp-block-columns) to your own class names instead of stripping them entirely, so you can restyle the equivalent structure on the static export. Includes a class browser tool (same idea as the field browser) to discover the actual class names used on a real post/page.
 
 = 1.0.0 =
 * Initial public release: template-based static generation, SFTP and Netlify deployment, automatic and custom URL rewriting, per-post templates, working contact forms (Netlify Forms / PHP mail handler), WordPress-menu-driven navigation, Markdown export, HTML cleanup rules.
@@ -88,7 +89,7 @@ Yes. The navigation feature is opt-in per navigation (main/footer) and does noth
 == Upgrade Notice ==
 
 = 1.1.0 =
-Adds a field browser tool - no breaking changes, safe to update.
+Adds a field browser and class mapping tool - no breaking changes, safe to update.
 
 = 1.0.0 =
 Initial release.
