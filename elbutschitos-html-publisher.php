@@ -86,6 +86,7 @@ require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-sftp-uploade
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-netlify-uploader.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-batch-controller.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-field-browser.php';
+require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-class-browser.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-ajax.php';
 require_once CONTENT2HTML_DEPLOY_DIR . 'includes/class-content2html-metabox.php';
 

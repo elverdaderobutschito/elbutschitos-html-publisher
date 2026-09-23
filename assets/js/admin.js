@@ -554,4 +554,156 @@ jQuery(function ($) {
             $row.html(originalHtml);
         }, 1200);
     });
+
+    // --- Class browser (Content tab) --------------------------------------
+    var $cbModal = $('#content2html-class-browser-modal');
+    var $cbPostSelect = $('#content2html-class-browser-post-select');
+    var $cbResults = $('#content2html-class-browser-results');
+    var $classMap = $('#class_map');
+
+    function cbMappedClasses() {
+        var mapped = {};
+        String($classMap.val()).split('\n').forEach(function (line) {
+            var parts = line.split('=>');
+            if (parts.length >= 1) {
+                var source = parts[0].trim();
+                if (source !== '') {
+                    mapped[source] = true;
+                }
+            }
+        });
+        return mapped;
+    }
+
+    function cbRenderClasses(classes) {
+        if (classes.length === 0) {
+            $cbResults.html('<p class="description">' + i18n.classBrowserNoClasses + '</p>');
+            return;
+        }
+
+        var mapped = cbMappedClasses();
+        var html = '';
+
+        classes.forEach(function (item) {
+            var isMapped = !!mapped[item['class']];
+            var rowClass = 'content2html-field-row' + (isMapped ? ' content2html-field-row-disabled' : '');
+            var badge = isMapped ? '<span class="content2html-field-linked-badge">' + i18n.classBrowserAlreadyMapped + '</span>' : '';
+
+            html += '<div class="' + rowClass + '"'
+                + ' data-class="' + $('<div>').text(item['class']).html() + '"'
+                + ' data-mapped="' + (isMapped ? '1' : '') + '"'
+                + '>'
+                + '<code>' + $('<div>').text(item['class']).html() + '</code>'
+                + '<span class="content2html-field-preview">' + $('<div>').text('<' + item.tag + '> ' + item.preview).html() + '</span>'
+                + badge
+                + '</div>';
+        });
+
+        $cbResults.html(html);
+    }
+
+    function cbLoadClasses(postId) {
+        $cbResults.html('<p class="description">' + i18n.classBrowserLoadingClasses + '</p>');
+
+        ajaxPost('content2html_class_browser_classes', {post_id: postId}).done(function (response) {
+            if (!response.success) {
+                $cbResults.html('<p style="color:#b32d2e;">' + ((response.data && response.data.message) || i18n.unknownError) + '</p>');
+                return;
+            }
+
+            cbRenderClasses((response.data && response.data.classes) || []);
+        }).fail(function () {
+            $cbResults.html('<p style="color:#b32d2e;">' + i18n.errorRequestFailed + '</p>');
+        });
+    }
+
+    $('#content2html-class-browser-open-btn').on('click', function () {
+        $cbModal.show();
+
+        // The browser only ever shows classes matching a configured
+        // prefix (see Content2HTML_ClassBrowser) - with nothing
+        // configured there's nothing it COULD find, so skip straight to
+        // telling the designer what to do first instead of making them
+        // pick a post and discover "no matches" themselves.
+        if ($('#remove_class_prefixes').val().trim() === '') {
+            $cbPostSelect.prop('disabled', true).html('<option value=""></option>');
+            $cbResults.html('<p class="description">' + i18n.classBrowserPrefixesRequired + '</p>');
+            return;
+        }
+
+        $cbResults.html('<p class="description">' + i18n.classBrowserSelectPrompt + '</p>');
+
+        // Reuses the same generic post list as the field browser - no
+        // need for a second, near-identical endpoint.
+        $cbPostSelect.prop('disabled', true).html('<option value="">' + i18n.fieldBrowserLoadingPosts + '</option>');
+
+        ajaxPost('content2html_field_browser_posts', {}).done(function (response) {
+            if (!response.success) {
+                $cbPostSelect.html('<option value="">' + ((response.data && response.data.message) || i18n.unknownError) + '</option>');
+                return;
+            }
+
+            var posts = (response.data && response.data.posts) || [];
+
+            if (posts.length === 0) {
+                $cbPostSelect.html('<option value="">' + i18n.fieldBrowserNoPosts + '</option>');
+                return;
+            }
+
+            var options = '<option value="">' + i18n.fieldBrowserSelectPost + '</option>';
+            posts.forEach(function (post) {
+                options += '<option value="' + post.id + '">' + $('<div>').text(post.title).html() + ' (' + post.post_type + ')</option>';
+            });
+
+            $cbPostSelect.prop('disabled', false).html(options);
+        }).fail(function () {
+            $cbPostSelect.html('<option value="">' + i18n.errorRequestFailed + '</option>');
+        });
+    });
+
+    $('#content2html-class-browser-close-btn').on('click', function () {
+        $cbModal.hide();
+    });
+
+    $cbModal.on('click', function (event) {
+        if (event.target === this) {
+            $cbModal.hide();
+        }
+    });
+
+    $cbPostSelect.on('change', function () {
+        var postId = $(this).val();
+
+        if (postId) {
+            cbLoadClasses(postId);
+        } else {
+            $cbResults.html('<p class="description">' + i18n.classBrowserSelectPrompt + '</p>');
+        }
+    });
+
+    $cbResults.on('click', '.content2html-field-row', function () {
+        var $row = $(this);
+
+        if ($row.data('mapped')) {
+            return; // already in the mapping table - nothing to do
+        }
+
+        var className = $row.data('class');
+        var current = $classMap.val();
+        var newLine = className + ' => ';
+
+        $classMap.val(current === '' ? newLine : current.replace(/\n*$/, '') + '\n' + newLine);
+        $classMap.trigger('change'); // so the "unsaved changes" tracking picks this up
+        $classMap.focus();
+        // Places the cursor right after "=> " so the designer can just
+        // start typing their own class name.
+        var pos = $classMap.val().length;
+        $classMap[0].setSelectionRange(pos, pos);
+
+        var originalHtml = $row.html();
+        $row.append(' <em>(' + i18n.classBrowserAdded + ')</em>');
+        setTimeout(function () {
+            $row.html(originalHtml);
+        }, 1200);
+    });
 });

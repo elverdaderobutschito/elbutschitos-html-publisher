@@ -48,6 +48,7 @@ class Content2HTML_GeneratorFactory {
 
         $prefixes = array_filter(array_map('trim', explode(',', $settings['remove_class_prefixes'])));
         $generator->setClassPrefixesToRemove(array_values($prefixes));
+        $generator->setClassMap(self::parseClassMap($settings['class_map']));
 
         $generator->setTidyHtmlRules(self::parseTidyHtmlRules($settings['tidy_html_rules']));
 
@@ -214,5 +215,41 @@ class Content2HTML_GeneratorFactory {
         }
 
         return $rules;
+    }
+
+    /**
+     * Parses the "Class mapping" textarea (one rule per line, "source =>
+     * target") into a source-class => target-class associative array.
+     * Lines without a "=>", or with an empty source/target, are skipped.
+     *
+     * @return array<string, string>
+     */
+    private static function parseClassMap(string $raw): array {
+        $map = [];
+
+        foreach (explode("\n", $raw) as $line) {
+            $line = trim($line);
+
+            if ($line === '') {
+                continue;
+            }
+
+            $parts = explode('=>', $line, 2);
+
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $source = trim($parts[0]);
+            $target = trim($parts[1]);
+
+            if ($source === '' || $target === '') {
+                continue;
+            }
+
+            $map[$source] = $target;
+        }
+
+        return $map;
     }
 }

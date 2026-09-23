@@ -76,6 +76,7 @@ class Content2HTML_Generator {
     private string $originalDomain;
     private bool $keepOriginalFileName = false;
     private array $classPrefixesToRemove = [];
+    private array $classMap = [];
     private array $tidyHtmlRules = [];
 
     /** @var string[] Absolute paths of all files written by injectDataIntoTemplate(). */
@@ -178,6 +179,19 @@ class Content2HTML_Generator {
      */
     public function setClassPrefixesToRemove(array $prefixes): void {
         $this->classPrefixesToRemove = $prefixes;
+    }
+
+    /**
+     * @param array<string, string> $map Source class name => replacement
+     *                                   class name (e.g.
+     *                                   ['wp-block-columns' => 'c2h-columns']).
+     *                                   Checked BEFORE the prefix removal
+     *                                   above, so a mapped class survives
+     *                                   (renamed) instead of being
+     *                                   stripped.
+     */
+    public function setClassMap(array $map): void {
+        $this->classMap = $map;
     }
 
     /**
@@ -405,6 +419,12 @@ class Content2HTML_Generator {
      * prefixes (see setClassPrefixesToRemove()) from every element's
      * class attribute - regardless of where in a multi-part class list
      * it sits - while leaving all other classes on that element intact.
+     * A token found in the class map (see setClassMap()) is checked
+     * FIRST and, if present, kept under its mapped replacement name
+     * instead of being removed - this lets a designer preserve specific
+     * layout-relevant classes (renamed to something they control and can
+     * style) while everything else matching a prefix still gets
+     * stripped as before.
      *
      * Works directly on the serialized HTML string rather than mutating
      * DOM nodes - deliberately NOT implemented as DOM attribute
@@ -419,26 +439,34 @@ class Content2HTML_Generator {
      */
     private function removeWPClassTokens(string $html): string {
         $prefixes = $this->classPrefixesToRemove;
+        $map = $this->classMap;
 
         return preg_replace_callback(
             '/\s*\bclass\s*=\s*(["\'])(.*?)\1/i',
-            function (array $matches) use ($prefixes): string {
+            function (array $matches) use ($prefixes, $map): string {
                 $quote = $matches[1];
                 $classes = preg_split('/\s+/', trim($matches[2]), -1, PREG_SPLIT_NO_EMPTY);
-                $kept = array_filter($classes, static function (string $class) use ($prefixes): bool {
+                $kept = [];
+
+                foreach ($classes as $class) {
+                    if (isset($map[$class]) && $map[$class] !== '') {
+                        $kept[] = $map[$class];
+                        continue;
+                    }
+
+                    $matchesPrefix = false;
+
                     foreach ($prefixes as $prefix) {
-                        // Matches both "wp-block-x" (starts with the
-                        // prefix) and a bare "wp" (the prefix with its
-                        // trailing dash removed) - the same two cases the
-                        // original, WordPress-specific version of this
-                        // handled.
                         if (strpos($class, $prefix) === 0 || $class === rtrim($prefix, '-')) {
-                            return false;
+                            $matchesPrefix = true;
+                            break;
                         }
                     }
 
-                    return true;
-                });
+                    if (!$matchesPrefix) {
+                        $kept[] = $class;
+                    }
+                }
 
                 return $kept === [] ? '' : ' class=' . $quote . implode(' ', $kept) . $quote;
             },
@@ -663,7 +691,7 @@ class Content2HTML_Generator {
 
             // Operates on the serialized string rather than the DOM - see
             // the docblock on removeWPClassTokens() for why.
-            if ($this->classPrefixesToRemove !== []) {
+            if ($this->classPrefixesToRemove !== [] || $this->classMap !== []) {
                 $output = $this->removeWPClassTokens($output);
             }
 

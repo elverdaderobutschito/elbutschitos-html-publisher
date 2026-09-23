@@ -60,6 +60,7 @@ class Content2HTML_Settings {
             'nav_active_class' => 'active',
             'date_format' => '',
             'remove_class_prefixes' => '',
+            'class_map' => '',
             'data_injection_rules' => '',
             'change_url_rules' => '',
             'tidy_html_rules' => '',
@@ -183,6 +184,12 @@ class Content2HTML_Settings {
                 'fieldBrowserLinkedBadge' => __('resolved link', 'elbutschitos-html-publisher'),
                 'fieldBrowserInserted' => __('Inserted.', 'elbutschitos-html-publisher'),
                 'fieldBrowserNotInsertable' => __('This is a plain list of IDs - used directly, it would just print the word "Array". Use the sourcePath|endpoint|dataPoint syntax instead (see the tutorial).', 'elbutschitos-html-publisher'),
+                'classBrowserLoadingClasses' => __('Loading classes...', 'elbutschitos-html-publisher'),
+                'classBrowserSelectPrompt' => __('Select a post/page above to load its classes.', 'elbutschitos-html-publisher'),
+                'classBrowserNoClasses' => __('No matching classes found on this post/page (nothing matches the configured prefixes). If you just changed "Remove CSS class prefixes" above, save the settings first.', 'elbutschitos-html-publisher'),
+                'classBrowserAlreadyMapped' => __('Already mapped', 'elbutschitos-html-publisher'),
+                'classBrowserAdded' => __('Added.', 'elbutschitos-html-publisher'),
+                'classBrowserPrefixesRequired' => __('Set "Remove CSS class prefixes" above and save the settings first - the browser only shows classes matching those saved prefixes.', 'elbutschitos-html-publisher'),
             ],
         ]);
     }
@@ -209,6 +216,7 @@ class Content2HTML_Settings {
             'post_types' => !empty($postTypes) ? $postTypes : ['post', 'page'],
             'date_format' => sanitize_text_field(wp_unslash($_POST['date_format'] ?? '')),
             'remove_class_prefixes' => sanitize_text_field(wp_unslash($_POST['remove_class_prefixes'] ?? '')),
+            'class_map' => sanitize_textarea_field(wp_unslash($_POST['class_map'] ?? '')),
             'data_injection_rules' => sanitize_textarea_field(wp_unslash($_POST['data_injection_rules'] ?? '')),
             'change_url_rules' => sanitize_textarea_field(wp_unslash($_POST['change_url_rules'] ?? '')),
             'tidy_html_rules' => sanitize_textarea_field(wp_unslash($_POST['tidy_html_rules'] ?? '')),
@@ -759,6 +767,16 @@ class Content2HTML_Settings {
                         </td>
                     </tr>
                     <tr>
+                        <th><label for="class_map"><?php esc_html_e('Class mapping', 'elbutschitos-html-publisher'); ?></label></th>
+                        <td>
+                            <textarea id="class_map" name="class_map" rows="6" class="large-text code"><?php echo esc_textarea($settings['class_map']); ?></textarea>
+                            <p>
+                                <button type="button" class="button" id="content2html-class-browser-open-btn"><?php esc_html_e('Browse available classes...', 'elbutschitos-html-publisher'); ?></button>
+                            </p>
+                            <p class="description"><?php esc_html_e('One rule per line: "wp-block-columns => c2h-columns". A class matched here is renamed and KEPT (instead of being stripped by the prefix removal above) - use this for layout-relevant classes whose CSS only exists inside WordPress, so you can style the equivalent structure yourself on the static export.', 'elbutschitos-html-publisher'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th><label for="data_injection_rules"><?php esc_html_e('Data injection rules', 'elbutschitos-html-publisher'); ?></label></th>
                         <td>
                             <textarea id="data_injection_rules" name="data_injection_rules" rows="6" class="large-text code" placeholder="title->rendered => ###title###"><?php echo esc_textarea($settings['data_injection_rules']); ?></textarea>
@@ -805,6 +823,27 @@ class Content2HTML_Settings {
                             <p class="description"><?php esc_html_e('Click a row to insert it into the Data Injection Rules field as a new line. Fields marked "array" are lists of IDs (e.g. custom taxonomy terms) - for the built-in author/featured image/categories/tags, the resolved, readable version is already listed below (marked "resolved link"); for other cases, use the sourcePath|endpoint|dataPoint syntax instead (see the tutorial).', 'elbutschitos-html-publisher'); ?></p>
                             <div id="content2html-field-browser-results" class="content2html-field-browser-results">
                                 <p class="description"><?php esc_html_e('Select a post/page above to load its available fields.', 'elbutschitos-html-publisher'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content2html-class-browser-modal" class="content2html-modal-overlay" style="display:none;">
+                    <div class="content2html-modal">
+                        <div class="content2html-modal-header">
+                            <h2><?php esc_html_e('Available classes', 'elbutschitos-html-publisher'); ?></h2>
+                            <button type="button" class="button-link" id="content2html-class-browser-close-btn" aria-label="<?php esc_attr_e('Close', 'elbutschitos-html-publisher'); ?>">&times;</button>
+                        </div>
+                        <div class="content2html-modal-body">
+                            <p>
+                                <label for="content2html-class-browser-post-select"><?php esc_html_e('Example post/page to inspect:', 'elbutschitos-html-publisher'); ?></label><br>
+                                <select id="content2html-class-browser-post-select" style="width:100%;">
+                                    <option value=""><?php esc_html_e('Loading...', 'elbutschitos-html-publisher'); ?></option>
+                                </select>
+                            </p>
+                            <p class="description"><?php esc_html_e('Shows every CSS class on this post/page that matches one of the prefixes configured above (e.g. "wp-", "uagb-") - the same classes the export would otherwise strip. Click a row to add it to the Class mapping field; already-mapped classes are marked and not clickable again.', 'elbutschitos-html-publisher'); ?></p>
+                            <div id="content2html-class-browser-results" class="content2html-field-browser-results">
+                                <p class="description"><?php esc_html_e('Select a post/page above to load its classes.', 'elbutschitos-html-publisher'); ?></p>
                             </div>
                         </div>
                     </div>

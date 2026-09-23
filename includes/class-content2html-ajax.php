@@ -19,6 +19,7 @@ class Content2HTML_AjaxController {
         add_action('wp_ajax_content2html_deploy_test_netlify', [$this, 'handleTestNetlify']);
         add_action('wp_ajax_content2html_field_browser_posts', [$this, 'handleFieldBrowserPosts']);
         add_action('wp_ajax_content2html_field_browser_fields', [$this, 'handleFieldBrowserFields']);
+        add_action('wp_ajax_content2html_class_browser_classes', [$this, 'handleClassBrowserClasses']);
     }
 
     private function checkAccess(): void {
@@ -420,5 +421,38 @@ class Content2HTML_AjaxController {
         }
 
         wp_send_json_success(['fields' => $fields]);
+    }
+
+    /**
+     * Returns the deduplicated "class, tag, preview" list of prefix-
+     * matching CSS classes found in one specific post/page's rendered
+     * content - see Content2HTML_ClassBrowser.
+     */
+    public function handleClassBrowserClasses(): void {
+        $this->checkAccess();
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
+        $postId = absint(wp_unslash($_POST['post_id'] ?? 0));
+        $post = $postId > 0 ? get_post($postId) : null;
+
+        if ($post === null) {
+            wp_send_json_error(['message' => __('Post not found.', 'elbutschitos-html-publisher')]);
+        }
+
+        $settings = Content2HTML_Settings::getSettings();
+
+        if (!in_array($post->post_type, $settings['post_types'], true)) {
+            wp_send_json_error(['message' => __('This post type is not enabled under Content.', 'elbutschitos-html-publisher')]);
+        }
+
+        $prefixes = array_filter(array_map('trim', explode(',', $settings['remove_class_prefixes'])));
+
+        try {
+            $classes = Content2HTML_ClassBrowser::getClasses($postId, $post->post_type, array_values($prefixes));
+        } catch (Throwable $e) {
+            wp_send_json_error(['message' => $e->getMessage()]);
+        }
+
+        wp_send_json_success(['classes' => $classes, 'prefixes' => array_values($prefixes)]);
     }
 }
