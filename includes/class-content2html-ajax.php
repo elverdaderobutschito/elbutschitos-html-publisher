@@ -399,6 +399,7 @@ class Content2HTML_AjaxController {
     public function handleFieldBrowserFields(): void {
         $this->checkAccess();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified above in checkAccess() (check_ajax_referer); phpcs's sniff can't trace verification across a method call.
         $postId = absint(wp_unslash($_POST['post_id'] ?? 0));
         $post = $postId > 0 ? get_post($postId) : null;
 
