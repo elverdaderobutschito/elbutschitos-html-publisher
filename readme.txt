@@ -14,6 +14,8 @@ Use WordPress as a headless CMS. Upload your own HTML template, define injection
 
 Elbutschitos HTML Publisher generates a fully static HTML export of your WordPress posts and pages, using WordPress purely as a headless content source, and pushes the result to a deployment target of your choice: Netlify or any standard SFTP host.
 
+**Full tutorial:** [htmlpublisher.ub-internetberatung.de](https://htmlpublisher.ub-internetberatung.de/) — step-by-step setup, template markers, navigation, forms, URL rewriting, HTML cleanup rules, and troubleshooting.
+
 **Core features**
 
 * **Template-driven generation** - use your own HTML template with simple `###placeholder###` markers (title, content, date, author, and any custom field via a flexible field-mapping syntax). Assign a different template per post or page when needed.
@@ -22,7 +24,7 @@ Elbutschitos HTML Publisher generates a fully static HTML export of your WordPre
 * **Working contact forms on a static site** - forms keep working after export. On Netlify, forms are automatically wired up for Netlify Forms. On SFTP targets, a small bundled PHP handler emails submissions, with spam-honeypot protection and lightweight client-side validation (required fields, email format) that needs no configuration for accessibility-friendly form markup.
 * **Navigation from a WordPress menu** - keep your designer's existing, fully styled navigation markup and let the plugin fill it with the real menu structure from a WordPress menu (multi-level menus supported), instead of maintaining two separate navigations by hand.
 * **Markdown export** - export all content as plain `.md` files with YAML front matter, optionally bundling and localizing referenced images, for use with static-site generators such as Hugo, Jekyll, or Eleventy, or for archiving in a note-taking tool.
-* **HTML cleanup rules** - remove WordPress-only CSS classes, strip or change arbitrary attributes via simple selector-based rules, and inject custom per-post data into the template.
+* **HTML cleanup rules** - remove WordPress-only CSS classes, or rename specific layout-relevant ones to your own class names via the class mapping tool so you can restyle them yourself; strip or change arbitrary attributes via simple selector-based rules, and inject custom per-post data into the template.
 
 Elbutschitos HTML Publisher is aimed at agencies and developers who want the editorial convenience of WordPress combined with the speed, security, and low hosting cost of a static site.
 
@@ -48,9 +50,9 @@ No data is sent anywhere without an explicit action from you, and no usage track
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/content2html` directory, or install the plugin through the WordPress plugins screen directly.
+1. Upload the plugin files to the `/wp-content/plugins/elbutschitos-html-publisher` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the "Plugins" screen in WordPress.
-3. Go to "HTML Publisher" in the admin menu to configure a template, choose a deployment target (SFTP or Netlify), and set up any optional features (forms, navigation, Markdown export).
+3. Go to "HTML Publisher" in the admin menu to configure a template, choose a deployment target (SFTP or Netlify), and set up any optional features (forms, navigation, Markdown export). For a full step-by-step walkthrough, see the [tutorial](https://htmlpublisher.ub-internetberatung.de/).
 4. Optional but recommended: define `CONTENT2HTML_ENCRYPTION_KEY` in `wp-config.php` before entering SFTP/Netlify credentials, so stored secrets are encrypted with a key that isn't stored in the database itself.
 
 == Frequently Asked Questions ==
@@ -70,6 +72,10 @@ See the "Working contact forms on a static site" feature above - forms are autom
 = Can I keep my own hand-built navigation instead of generating it from a WordPress menu? =
 
 Yes. The navigation feature is opt-in per navigation (main/footer) and does nothing unless explicitly enabled.
+
+= Where can I find a full tutorial? =
+
+See [htmlpublisher.ub-internetberatung.de](https://htmlpublisher.ub-internetberatung.de/) for a complete, illustrated walkthrough of every feature, including a standalone playground to try the marker syntax without installing anything.
 
 == Screenshots ==
 

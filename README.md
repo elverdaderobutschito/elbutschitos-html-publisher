@@ -4,6 +4,10 @@ Use WordPress as a headless CMS without building a WordPress theme.
 Upload your HTML template, define your own injection points, and
 publish the result as a static website.
 
+**Full tutorial:** [htmlpublisher.ub-internetberatung.de](https://htmlpublisher.ub-internetberatung.de/) —
+step-by-step setup, template markers, navigation, forms, URL rewriting,
+HTML cleanup rules, and troubleshooting.
+
 Generates static HTML files from WordPress content (posts/pages) using
 `class-content2html-generator.php` - directly, internally, via
 `rest_do_request()`, without an HTTP loopback - and uploads them via
@@ -39,8 +43,8 @@ directory structure (permalink paths) defined in WordPress.
    Without this constant, the plugin still works (with an automatically
    generated key stored in the database), but that's weaker.
 
-4. Upload the plugin folder to `wp-content/plugins/content2html/` and
-   activate it in WordPress.
+4. Upload the plugin folder to `wp-content/plugins/elbutschitos-html-publisher/`
+   and activate it in WordPress.
 
 5. Configure under **HTML Publisher** (its own menu item):
    - Post types (posts/pages)
@@ -61,6 +65,19 @@ directory structure (permalink paths) defined in WordPress.
   - On **Netlify**: since a Netlify deploy always replaces the entire
     site content, this button triggers a full rebuild + redeploy of all
     pages instead (with a corresponding note in the backend).
+
+## Field browser
+
+Under **HTML Publisher** → Content tab, next to "Data Injection Rules",
+a **"Browse available fields..."** button opens a picker: choose an
+example post/page, and see every field the REST API actually returns
+for it, with a preview of its value - instead of having to inspect raw
+JSON to find the right `sourcePath|endpoint|dataPoint` syntax. Author,
+featured image, categories, and tags are automatically resolved into
+their readable values (not just raw IDs); a shortlist of the most
+commonly needed fields (title, content, excerpt, slug, permalink, date)
+is shown first for quick access. Clicking a row inserts the
+corresponding rule as a new line in "Data Injection Rules".
 
 ## Per-page templates
 
@@ -111,6 +128,32 @@ Can be enabled separately per navigation (main/footer) - if the toggle
 is off, the template is left untouched at that spot. The menu item for
 the page currently being generated is automatically marked with a
 configurable CSS class (default: `active`).
+
+## CSS classes on export
+
+Two related settings, both under **HTML Publisher** → Content tab:
+
+- **Remove CSS class prefixes**: comma-separated list of prefixes (e.g.
+  `wp-, uagb-`) - any class starting with one of these is stripped from
+  every element in the export.
+- **Class mapping**: one rule per line (`wp-block-columns => c2h-columns`)
+  - a class matched here is checked *before* the prefix removal above
+  and, if found, renamed and **kept** instead of being stripped. Use
+  this for layout-relevant classes whose actual CSS only exists inside
+  WordPress (e.g. Gutenberg's or a page builder's own block classes), so
+  you can restyle the equivalent structure yourself in the static
+  export's own stylesheet.
+
+A **"Browse available classes..."** button (same idea as the field
+browser above) opens a picker: choose an example post/page, and see
+every class on it that matches one of the configured prefixes, with the
+element's tag and a text preview - so you don't need to know Gutenberg
+or page-builder internals to find the exact class name. Already-mapped
+classes are marked. Recommended workflow: build one test page stacking
+every layout variant you use, then browse it once to map everything at
+once. The button only works once "Remove CSS class prefixes" has at
+least one prefix configured *and saved* (that's what the class browser
+filters by).
 
 ## Markdown export
 
